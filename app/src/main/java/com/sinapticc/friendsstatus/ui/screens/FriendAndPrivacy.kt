@@ -34,6 +34,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.mutableStateOf
+import com.sinapticc.friendsstatus.ui.components.PopDialog
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -109,8 +112,8 @@ fun FriendScreen(store: AppStore) {
             }
             Label("«${f.text}»", 21, t.fg, modifier = Modifier.padding(top = 8.dp).widthIn(max = 300.dp))
             Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                InfoPill(f.place, icon = placeIcon(f.place), iconTint = t.vio, fontSize = 13, fg = t.fg)
-                InfoPill(f.distance, fontSize = 13, fg = t.fg)
+                if (f.place.isNotEmpty()) InfoPill(f.place, icon = placeIcon(f.place), iconTint = t.vio, fontSize = 13, fg = t.fg)
+                if (f.distance.isNotEmpty()) InfoPill(f.distance, fontSize = 13, fg = t.fg)
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -187,6 +190,8 @@ fun PrivacyScreen(store: AppStore) {
     val s = store.state
     val t = LocalTokens.current
     val (a, b) = Catalog.avatarColors[s.avatar]
+    var confirmDelete by remember { mutableStateOf(false) }
+    Box(Modifier.fillMaxSize()) {
     ScrollScreen(bottom = NavHeight + 24.dp, top = 16.dp) {
         Row(Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(64.dp)) {
@@ -196,7 +201,7 @@ fun PrivacyScreen(store: AppStore) {
             RowSpacer(14.dp)
             Column(Modifier.weight(1f)) {
                 Title(s.nick, 24)
-                Label("۳ گروه · ۱۴ رفیق", 13, t.sub, FontWeight.Bold)
+                Label("${Fa.num(s.realGroups.size)} گروه · ${Fa.num(s.friends.size)} رفیق", 13, t.sub, FontWeight.Bold)
             }
             IconCircle(Icons.Rounded.Settings, "تنظیمات", onClick = { store.tab(Screen.Profile) })
         }
@@ -259,8 +264,10 @@ fun PrivacyScreen(store: AppStore) {
 
         SectionHeader("برای هر گروه", "برای تغییر بزن")
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(Triple("flat", 6, "toilet" to "partying"), Triple("uni", 12, "studying" to "coffee"), Triple("fam", 4, "eating" to "sleeping")).forEach { (k, members, chars) ->
-                val lv = s.groupLevels[k] ?: ShareLevel.Approx
+            s.realGroups.forEach { g ->
+                val k = g.id
+                val lv = g.share
+                val chars = g.members.mapNotNull { m -> s.friends.firstOrNull { it.id == m.id }?.status }.take(2).let { it + List(2 - it.size) { "custom" } }
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -272,12 +279,12 @@ fun PrivacyScreen(store: AppStore) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Row(Modifier.padding(start = 10.dp)) {
-                        StatusChar(chars.first, Modifier.offset(x = (-10).dp).size(36.dp))
-                        StatusChar(chars.second, Modifier.offset(x = (-22).dp).size(36.dp))
+                        StatusChar(chars[0], Modifier.offset(x = (-10).dp).size(36.dp))
+                        StatusChar(chars[1], Modifier.offset(x = (-22).dp).size(36.dp))
                     }
                     Column(Modifier.weight(1f)) {
-                        Label(Catalog.group(k).name, 15, t.fg)
-                        Label("${Fa.num(members)} رفیق", 12, t.sub, FontWeight.Bold)
+                        Label(g.name, 15, t.fg, maxLines = 1)
+                        Label("${Fa.num(g.members.size - 1)} رفیق", 12, t.sub, FontWeight.Bold)
                     }
                     val (lbg, lfg, text) = when (lv) {
                         ShareLevel.Exact -> Triple(t.selectedBg, t.adminFg, "دقیق")
@@ -307,8 +314,21 @@ fun PrivacyScreen(store: AppStore) {
         }
         Column(Modifier.padding(top = 22.dp, start = 6.dp, end = 6.dp)) {
             Label("پاک کردن تاریخچه‌ی وضعیت‌هام", 14, t.vio, modifier = Modifier.tap(store::clearHistory).padding(vertical = 7.dp))
-            Label("ترک همه‌ی گروه‌ها و حذف داده‌ها", 14, Danger, modifier = Modifier.tap { store.toast("crying", "برای حذف حساب، اول باید به سرور وصل بشیم") }.padding(vertical = 7.dp))
+            Label("ترک همه‌ی گروه‌ها و حذف داده‌ها", 14, Danger, modifier = Modifier.tap { confirmDelete = true }.padding(vertical = 7.dp))
         }
     }
+    PopDialog(confirmDelete, { confirmDelete = false }) {
+        StatusChar("crying", Modifier.size(90.dp), idle = true)
+        Title("همه‌چی پاک بشه؟", 22, modifier = Modifier.padding(top = 8.dp))
+        Label("از همه‌ی گروه‌ها بیرون میای و وضعیت‌ها و حسابت برای همیشه پاک می‌شه.", 14, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp))
+        Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(26.dp)).background(t.tonal).tap { confirmDelete = false }, contentAlignment = Alignment.Center) {
+                Label("نه", 15, t.fg, FontWeight.Black)
+            }
+            Box(Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(26.dp)).background(Danger).tap { confirmDelete = false; store.deleteEverything() }, contentAlignment = Alignment.Center) {
+                Label("پاک کن", 15, Color.White, FontWeight.Black)
+            }
+        }
+    }
+    }
 }
-

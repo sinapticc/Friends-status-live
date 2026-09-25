@@ -10,6 +10,8 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.annotation.SuppressLint
+import android.location.LocationManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -31,7 +33,19 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
+import com.sinapticc.friendsstatus.android.FslWidget
+import com.sinapticc.friendsstatus.android.LiveBus
+import com.sinapticc.friendsstatus.android.Push
+import com.sinapticc.friendsstatus.android.Sync
+import com.sinapticc.friendsstatus.android.WidgetData
+import com.sinapticc.friendsstatus.android.prefs
 import com.sinapticc.friendsstatus.data.AppStore
+import com.sinapticc.friendsstatus.data.FeedDto
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import com.sinapticc.friendsstatus.data.Platform
 import com.sinapticc.friendsstatus.data.Prefs
 import com.sinapticc.friendsstatus.ui.AppRoot
@@ -64,6 +78,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         vm.platform.activity = this
         val store = vm.store
+        Sync.schedule(this)
         setContent {
             val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             val bottom = WindowInsets.navigationBars.union(WindowInsets.ime).asPaddingValues().calculateBottomPadding()
@@ -74,6 +89,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        vm.store.setForeground(true)
+    }
+
+    override fun onStop() {
+        vm.store.setForeground(false)
+        super.onStop()
     }
 
     override fun onDestroy() {
@@ -111,6 +136,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val platform = AndroidPlatform(app)
     val store = AppStore(platform, viewModelScope)
 
+    init {
+        // A push while the app is open refreshes the feed right away.
+        viewModelScope.launch { LiveBus.changes.collect { store.onPush() } }
+    }
+
     override fun onCleared() {
         platform.activity = null
     }
@@ -119,7 +149,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 class AndroidPlatform(private val app: Application) : Platform {
     var activity: MainActivity? = null
 
-    private val sp = app.getSharedPreferences("fsl", Context.MODE_PRIVATE)
+    private val sp = prefs(app)
+    private val io = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    override val apiUrl: String = BuildConfig.API_URL
 
     override val prefs = object : Prefs {
         override fun get(key: String): String? = sp.getString(key, null)
@@ -164,4 +197,29 @@ class AndroidPlatform(private val app: Application) : Platform {
         if (photoFile.exists()) BitmapFactory.decodeFile(photoFile.path)?.asImageBitmap() else null
 
     override fun clock(): String = SimpleDateFormat("HH:mm", Locale.US).format(Date())
+
+    @SuppressLint("MissingPermission")
+    override fun lastLocation(): Pair<Double, Double>? {
+        val granted = ContextCompat.checkSelfPermission(app, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (!granted) return null
+        val lm = app.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val best = lm.getProviders(true).mapNotNull { runCatching { lm.getLastKnownLocation(it) }.getOrNull() }.maxByOrNull { it.time }
+        return best?.let { it.latitude to it.longitude }
+    }
+
+    override fun onFeed(feed: FeedDto) {
+        io.launch {
+            WidgetData.save(app, feed)
+            runCatching { FslWidget.refreshAll(app) }
+        }
+    }
+
+    override fun pushToken(onToken: (String?) -> Unit) = Push.token(app) { t -> activity?.runOnUiThread { onToken(t) } ?: onToken(t) }
+
+    override fun clearLocalData() {
+        photoFile.delete()
+        sp.edit().clear().apply()
+        WorkManager.getInstance(app).cancelAllWork()
+        io.launch { runCatching { FslWidget.refreshAll(app) } }
+    }
 }

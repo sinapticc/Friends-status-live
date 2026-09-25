@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">رفقا لایو</string>
+    <string name="widget_name">وضعیت رفقا</string>
+    <string name="widget_description">وضعیت زنده‌ی رفقات روی صفحه‌ی اصلی</string>
 </resources>

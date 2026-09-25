@@ -88,16 +88,26 @@ object Catalog {
 
     val defaultFavorites = listOf("coffee", "gym", "toilet", "free", "spicy")
 
-    val groups = listOf(
-        GroupDef("all", "همه", Icons.Rounded.Apps, Color(0xFFE8E4FF), Color(0xFF9A8CFF)),
-        GroupDef("flat", "هم‌خونه‌ها", Icons.Rounded.Home, Color(0xFFC9B6FF), Color(0xFF7B4DFF)),
-        GroupDef("uni", "بچه‌های دانشگاه", Icons.Rounded.School, Color(0xFFFFE0A0), Color(0xFFFF9F1C)),
-        GroupDef("gym", "رفقای باشگاه", Icons.Rounded.FitnessCenter, Color(0xFFAEEAFF), Color(0xFF2F8CFF)),
-        GroupDef("fam", "خانواده", Icons.Rounded.FamilyRestroom, Color(0xFFFFC0D2), Color(0xFFFF4F7D)),
-        GroupDef("one", "دونفره", Icons.Rounded.Favorite, Color(0xFFFFD0E6), Color(0xFFFF5CA8)),
+    /** Group icons the server accepts, with their Persian names. */
+    val groupIcons: List<Pair<String, ImageVector>> = listOf(
+        "home" to Icons.Rounded.Home, "school" to Icons.Rounded.School, "fitness" to Icons.Rounded.FitnessCenter,
+        "family" to Icons.Rounded.FamilyRestroom, "star" to Icons.Rounded.Star, "work" to Icons.Rounded.Work,
     )
 
-    fun group(key: String): GroupDef = groups.firstOrNull { it.key == key } ?: groups.first()
+    fun groupIcon(key: String): ImageVector = when (key) {
+        "favorite" -> Icons.Rounded.Favorite
+        else -> groupIcons.firstOrNull { it.first == key }?.second ?: Icons.Rounded.Home
+    }
+
+    /** The five group colors from the design, as gradient pairs. */
+    val groupColors = listOf(
+        Color(0xFFC9B6FF) to Color(0xFF7B4DFF), Color(0xFFFFD0E6) to Color(0xFFFF5CA8), Color(0xFFAEEAFF) to Color(0xFF2F8CFF),
+        Color(0xFFFFE0A0) to Color(0xFFFF9F1C), Color(0xFFB5F7D1) to Color(0xFF3FCF8A),
+    )
+    val groupColorNames = listOf("بنفش", "صورتی", "آبی", "نارنجی", "سبز")
+
+    val allChip = GroupDef("all", "همه", Icons.Rounded.Apps, Color(0xFFE8E4FF), Color(0xFF9A8CFF))
+    val pairsChip = GroupDef("pairs", "دونفره", Icons.Rounded.Favorite, Color(0xFFFFD0E6), Color(0xFFFF5CA8))
 
     /** Accessory overlay anchors for status characters: center x %, center y %, scale. */
     val accAnchors: Map<String, Triple<Float, Float, Float>> = mapOf(

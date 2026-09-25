@@ -41,6 +41,7 @@ import com.sinapticc.friendsstatus.model.Screen
 import com.sinapticc.friendsstatus.ui.components.Label
 import com.sinapticc.friendsstatus.ui.components.ToastHost
 import com.sinapticc.friendsstatus.ui.components.tap
+import com.sinapticc.friendsstatus.ui.screens.AddSheet
 import com.sinapticc.friendsstatus.ui.screens.CropScreen
 import com.sinapticc.friendsstatus.ui.screens.EditorScreen
 import com.sinapticc.friendsstatus.ui.screens.FriendScreen
@@ -102,7 +103,10 @@ fun AppRoot(store: AppStore) {
             if (s.screen in listOf(Screen.Home, Screen.Privacy, Screen.Profile)) {
                 BottomNav(s.screen, Modifier.align(Alignment.BottomCenter)) { store.tab(it) }
             }
-            if (s.screen == Screen.Home) StatusPickerSheet(store)
+            if (s.screen == Screen.Home) {
+                StatusPickerSheet(store)
+                AddSheet(store)
+            }
             ToastHost(s.toast)
         }
     }

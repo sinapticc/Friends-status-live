@@ -1,0 +1,81 @@
+name: Server
+
+on:
+  push:
+    paths: ["server/**", ".github/workflows/server.yml"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - name: API tests against a local worker
+        run: |
+          npx wrangler d1 migrations apply fsl --local
+          npx wrangler dev --port 8787 > wrangler.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8787/ >/dev/null && break; sleep 1; done
+          node test/api.test.mjs || (cat wrangler.log; exit 1)
+
+  deploy:
+    needs: test
+    # Deploys from the default branch (or a manual run), once the Cloudflare secrets exist (see README).
+    if: github.ref_name == github.event.repository.default_branch || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      FCM_SERVICE_ACCOUNT: ${{ secrets.FCM_SERVICE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Check secrets
+        id: secrets
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::Skipping deploy: add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in Settings > Secrets and variables > Actions."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - run: npm ci
+        if: steps.secrets.outputs.ready == 'true'
+      - name: Create the D1 database on first run
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          id=$(npx wrangler d1 list --json | node -e 'const l=JSON.parse(require("fs").readFileSync(0,"utf8"));const d=l.find(x=>x.name==="fsl");process.stdout.write(d?d.uuid:"")')
+          if [ -z "$id" ]; then
+            npx wrangler d1 create fsl
+            id=$(npx wrangler d1 list --json | node -e 'const l=JSON.parse(require("fs").readFileSync(0,"utf8"));process.stdout.write(l.find(x=>x.name==="fsl").uuid)')
+          fi
+          sed -i "s/^database_id = .*/database_id = \"$id\"/" wrangler.toml
+          echo "D1 database: $id"
+      - run: npx wrangler d1 migrations apply fsl --remote
+        if: steps.secrets.outputs.ready == 'true'
+      - name: Push secret
+        if: steps.secrets.outputs.ready == 'true' && env.FCM_SERVICE_ACCOUNT != ''
+        run: printf '%s' "$FCM_SERVICE_ACCOUNT" | npx wrangler secret put FCM_SERVICE_ACCOUNT
+      - name: Deploy
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          npx wrangler deploy | tee deploy.log
+          url=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          echo "### Server address" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$url\` — put this in the FSL_API_URL variable so the app uses it." >> "$GITHUB_STEP_SUMMARY"

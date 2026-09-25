@@ -193,7 +193,8 @@ fun JoinCodeScreen(store: AppStore) {
                 }
             }
         }
-        if (code.length == 6) {
+        val preview = s.joinPreview
+        if (code.length == 6 && preview != null) {
             Card(Modifier.fillMaxWidth().padding(top = 22.dp), padding = 16.dp) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Row(Modifier.padding(start = 10.dp)) {
@@ -202,8 +203,9 @@ fun JoinCodeScreen(store: AppStore) {
                         }
                     }
                     Column(Modifier.weight(1f)) {
-                        Title(Catalog.group("flat").name, 17)
-                        Label("مریم، آرش، کیان + ۳ نفر دیگه", 13, t.sub, FontWeight.Bold)
+                        Title(preview.name, 17, maxLines = 1)
+                        val more = preview.count - preview.names.size
+                        Label(preview.names.joinToString("، ") + if (more > 0) " + ${Fa.num(more)} نفر دیگه" else "", 13, t.sub, FontWeight.Bold, maxLines = 1)
                     }
                     Icon(Icons.Rounded.CheckCircle, null, Modifier.size(26.dp), tint = t.acc)
                 }
@@ -231,7 +233,7 @@ fun JoinCodeScreen(store: AppStore) {
             Label("لینک دعوت رو بچسبون", 15, t.sub)
         }
         Fill()
-        PrimaryButton(if (code.length == 6) "ورود به «${Catalog.group("flat").name}»" else "ادامه", store::submitJoinCode, enabled = code.length == 6)
+        PrimaryButton(if (preview != null) "ورود به «${preview.name}»" else "ادامه", store::submitJoinCode, enabled = code.length == 6 && preview != null)
     }
 }
 
@@ -287,7 +289,7 @@ fun ProfileSetupScreen(store: AppStore) {
         )
         Label("رفقا بعداً می‌تونن برات لقب بذارن. آماده باش.", 13, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp, start = 6.dp))
         Fill()
-        PrimaryButton(if (s.onboarded) "ذخیره" else "عالیه", { if (s.onboarded) store.back() else store.profileNext() }, enabled = s.nick.isNotBlank())
+        PrimaryButton(if (s.onboarded) "ذخیره" else "عالیه", { if (s.onboarded) store.saveProfile() else store.profileNext() }, enabled = s.nick.isNotBlank())
     }
 }
 
@@ -340,8 +342,9 @@ fun LocationScreen(store: AppStore) {
             }
         }
         Fill()
-        PrimaryButton("موقع استفاده از برنامه اجازه بده", store::allowLocation)
-        Box(Modifier.fillMaxWidth().padding(top = 6.dp).height(48.dp).tap(store::finishOnboarding), contentAlignment = Alignment.Center) {
+        val s = store.state
+        PrimaryButton(if (s.busy) "یه لحظه…" else "موقع استفاده از برنامه اجازه بده", store::allowLocation, enabled = !s.busy)
+        Box(Modifier.fillMaxWidth().padding(top = 6.dp).height(48.dp).tap { if (!store.state.busy) store.finishOnboarding() }, contentAlignment = Alignment.Center) {
             Label("بعداً", 15, t.sub)
         }
     }
@@ -376,8 +379,10 @@ fun JoinedScreen(store: AppStore) {
             Text(
                 buildAnnotatedString {
                     append("به ")
-                    withStyle(SpanStyle(color = t.fg, fontWeight = FontWeight.Black)) { append(Catalog.group("flat").name) }
-                    append(" خوش اومدی. آرش، مریم، سامان و کیان الان می‌بیننت.")
+                    val g = s.realGroups.lastOrNull()
+                    withStyle(SpanStyle(color = t.fg, fontWeight = FontWeight.Black)) { append(g?.name ?: "گروه") }
+                    val names = g?.members?.map { it.nick }?.filter { it != s.nick }?.take(4).orEmpty()
+                    append(if (names.isEmpty()) " خوش اومدی." else " خوش اومدی. ${names.joinToString("، ")} الان می‌بیننت.")
                 },
                 style = Type.body(16.sp, FontWeight.Bold, t.sub).copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp).widthIn(max = 300.dp),

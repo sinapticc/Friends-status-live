@@ -245,8 +245,12 @@ fun BoxScope.StatusPickerSheet(store: AppStore) {
                 }
                 val note = when (p.visibility) {
                     "all" -> "همه‌ی آدمای گروه‌هات می‌بیننش."
-                    "groups" -> "فقط «هم‌خونه‌ها» می‌بینن. بقیه‌ی گروه‌ها «سرم شلوغه» می‌بینن."
-                    else -> "فقط مریم و رها می‌بینن. بقیه «سرم شلوغه» می‌بینن."
+                    "groups" -> "فقط «${s.activeGroup?.name ?: "گروهت"}» می‌بینه. بقیه‌ی گروه‌ها «سرم شلوغه» می‌بینن."
+                    else -> {
+                        val names = s.groups.filter { it.pair }.map { it.name }
+                        if (names.isEmpty()) "هنوز فضای دونفره نداری، پس همه «سرم شلوغه» می‌بینن."
+                        else "فقط ${names.joinToString("، ")} می‌بینن. بقیه «سرم شلوغه» می‌بینن."
+                    }
                 }
                 Label(note, 12, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp))
             }
@@ -266,7 +270,7 @@ fun BoxScope.StatusPickerSheet(store: AppStore) {
                 RowSpacer(12.dp)
                 Column(Modifier.weight(1f)) {
                     Label("اشتراک مکان", 15, t.fg)
-                    Label(if (p.shareLocation) "تقریبی · به‌صورت «باشگاه انقلاب» نشون داده می‌شه" else "خاموش · رفقا فقط وضعیتت رو می‌بینن", 12, t.sub, FontWeight.Bold)
+                    Label(if (p.shareLocation) "رفقا فاصله‌شون تا تو رو می‌بینن" else "خاموش · رفقا فقط وضعیتت رو می‌بینن", 12, t.sub, FontWeight.Bold)
                 }
                 Toggle(p.shareLocation)
             }
@@ -295,7 +299,7 @@ fun BoxScope.StatusPickerSheet(store: AppStore) {
         }
 
         PrimaryButton(
-            "ارسال برای «${Catalog.group(s.activeGroup).name}»",
+            "ارسال برای رفقا",
             onClick = store::post,
             modifier = Modifier.padding(top = 16.dp),
             icon = Icons.Rounded.Send,

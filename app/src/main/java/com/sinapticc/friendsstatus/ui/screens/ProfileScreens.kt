@@ -76,7 +76,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.sinapticc.friendsstatus.data.AppStore
-import com.sinapticc.friendsstatus.data.FakeData
 import com.sinapticc.friendsstatus.model.Catalog
 import com.sinapticc.friendsstatus.model.Fa
 import com.sinapticc.friendsstatus.model.Screen
@@ -157,7 +156,6 @@ fun ProfileScreen(store: AppStore) {
         }
         Column(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Title(s.nick, 30)
-            Label("خواب‌آلود حرفه‌ای · آشپز آماتور", 14, t.sub, FontWeight.Bold)
             Row(
                 Modifier
                     .padding(top = 12.dp)
@@ -172,7 +170,7 @@ fun ProfileScreen(store: AppStore) {
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(3 to "گروه", 2 to "دونفره", 14 to "رفیق").forEach { (n, l) ->
+            listOf(s.realGroups.size to "گروه", s.pairIds.size to "دونفره", s.friends.size to "رفیق").forEach { (n, l) ->
                 Column(
                     Modifier.weight(1f).clip(RoundedCornerShape(22.dp)).background(t.card).border(1.dp, t.line, RoundedCornerShape(22.dp)).padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -231,12 +229,12 @@ fun ProfileScreen(store: AppStore) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(84.dp).clip(RoundedCornerShape(18.dp)).background(Color.White).padding(7.dp)) {
-                QrCode("https://fsl.live/1/${FakeData.MY_ONE_ON_ONE_CODE}", Modifier.fillMaxSize())
+                QrCode("https://fsl.live/1/${s.pairCode.ifEmpty { "-" }}", Modifier.fillMaxSize())
             }
             RowSpacer(14.dp)
             Column(Modifier.weight(1f)) {
                 Label("کد دونفره‌ی من", 12, Color.White.copy(alpha = .8f))
-                Title("SAM·7Q2K", 22, Color.White)
+                Title(if (s.pairCode.length == 7) s.pairCode.take(3) + "·" + s.pairCode.drop(3) else "…", 22, Color.White)
                 Label("برای یه فضای خصوصی با یه رفیق", 12, Color.White.copy(alpha = .85f), FontWeight.Bold)
             }
             IconCircle(Icons.Rounded.Share, "اشتراک", bg = Color.White.copy(alpha = .2f), tint = Color.White, onClick = store::shareMyCode)

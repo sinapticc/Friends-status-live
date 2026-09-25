@@ -27,6 +27,9 @@ fun artPainter(name: String): Painter {
     return painterResource(id)
 }
 
+/** Drawable id of a character image, for places that can't use Compose painters (widgets). */
+fun artRes(name: String): Int? = art[name]
+
 private val art: Map<String, Int> = mapOf(
     "acc_beanie" to R.drawable.acc_beanie,
     "acc_bow" to R.drawable.acc_bow,

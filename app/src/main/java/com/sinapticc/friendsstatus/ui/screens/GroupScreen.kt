@@ -75,25 +75,29 @@ import com.sinapticc.friendsstatus.ui.theme.Pink
 import androidx.compose.runtime.CompositionLocalProvider
 
 /** A row in the members list. */
-private data class Member(val id: String, val name: String, val status: String, val text: String, val a: Color, val b: Color)
+private data class Member(val id: String, val name: String, val status: String, val text: String, val a: Color, val b: Color, val admin: Boolean, val me: Boolean)
 
 private fun members(store: AppStore): List<Member> {
     val s = store.state
-    val (a, b) = Catalog.avatarColors[s.avatar]
-    val me = Member(AppStore.ME_ID, "${s.nick} (تو)", s.me.key, s.me.text, a, b)
-    val g = s.activeGroup
-    return listOf(me) + s.friends.filter { g in it.groups && it.id !in s.admin.removed }
-        .map { Member(it.id, it.name, it.status, it.text, it.colorA, it.colorB) }
+    val g = s.activeGroup ?: return emptyList()
+    val myId = store.myId()
+    return g.members.map { m ->
+        val (a, b) = Catalog.avatarColors[m.avatar.coerceIn(0, Catalog.avatarColors.lastIndex)]
+        if (m.id == myId) Member(m.id, "${s.nick} (تو)", s.me.key, s.me.text, a, b, m.admin, true)
+        else {
+            val f = s.friends.firstOrNull { it.id == m.id }
+            Member(m.id, m.nick, f?.status ?: "custom", f?.text ?: "", f?.colorA ?: a, f?.colorB ?: b, m.admin, false)
+        }
+    }.sortedBy { !it.me }
 }
 
 @Composable
 fun GroupScreen(store: AppStore) {
     val s = store.state
     val t = LocalTokens.current
-    val g = Catalog.group(s.activeGroup)
+    val g = s.activeGroup ?: return
     val ms = members(store)
-    val ad = s.admin
-    val pretty = Fa.digits(ad.code.take(3) + " " + ad.code.drop(3))
+    val (ga, gb) = Catalog.groupColors[g.color.coerceIn(0, Catalog.groupColors.lastIndex)]
     Box(Modifier.fillMaxSize()) {
         ScrollScreen(background = {
             Box(
@@ -107,11 +111,11 @@ fun GroupScreen(store: AppStore) {
             TopBar(
                 start = { IconCircle(Icons.Rounded.ArrowForward, "برگشت", iconSize = 24.dp, onClick = store::back) },
                 middle = {
-                    Box(Modifier.clip(RoundedCornerShape(99.dp)).background(t.acc.copy(alpha = .16f)).padding(horizontal = 12.dp, vertical = 6.dp)) {
+                    if (g.admin) Box(Modifier.clip(RoundedCornerShape(99.dp)).background(t.acc.copy(alpha = .16f)).padding(horizontal = 12.dp, vertical = 6.dp)) {
                         Label("تو مدیری", 12, t.acc, FontWeight.Black)
                     }
                 },
-                end = { IconCircle(Icons.Rounded.MoreVert, "بیشتر", iconSize = 24.dp) },
+                end = { if (g.admin) IconCircle(Icons.Rounded.Edit, "ویرایش گروه", iconSize = 22.dp, onClick = store::openRename) },
             )
             Column(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.size(104.dp)) {
@@ -121,87 +125,28 @@ fun GroupScreen(store: AppStore) {
                             .fillMaxSize()
                             .shadow(20.dp, shape, ambientColor = Color(0x665A28B4), spotColor = Color(0x665A28B4))
                             .clip(shape)
-                            .background(Brush.linearGradient(listOf(g.colorA, g.colorB))),
+                            .background(Brush.linearGradient(listOf(ga, gb))),
                         contentAlignment = Alignment.Center,
-                    ) { Icon(g.icon, null, Modifier.size(52.dp), tint = Ink) }
-                    StatusChar("partying", Modifier.align(Alignment.BottomEnd).offset(x = 18.dp, y = 12.dp).size(54.dp))
-                    IconCircle(Icons.Rounded.PhotoCamera, "عکس گروه", Modifier.align(Alignment.TopStart).offset(x = (-6).dp, y = (-6).dp), size = 34.dp, iconSize = 18.dp, bg = t.fg, tint = t.bg)
+                    ) { Icon(Catalog.groupIcon(g.icon), null, Modifier.size(52.dp), tint = Ink) }
+                    StatusChar(ms.firstOrNull { !it.me }?.status ?: "partying", Modifier.align(Alignment.BottomEnd).offset(x = 18.dp, y = 12.dp).size(54.dp))
                 }
-                Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Title(g.name, 28)
-                    RowSpacer(8.dp)
-                    Icon(Icons.Rounded.Edit, "تغییر نام", Modifier.size(20.dp), tint = t.sub)
-                }
-                Label("${Fa.num(ms.size)} عضو · از اسفند", 13, t.sub, FontWeight.Bold)
-                Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(0xFF7B4DFF, 0xFFFF5CA8, 0xFF2F8CFF, 0xFFFF9F1C, 0xFF3FCF8A).forEachIndexed { i, c ->
-                        Box(
-                            Modifier
-                                .size(26.dp)
-                                .then(if (i == 0) Modifier.border(2.dp, t.fg, CircleShape).padding(4.dp) else Modifier)
-                                .clip(CircleShape)
-                                .background(Color(c))
-                        )
-                    }
-                }
+                Title(g.name, 28, modifier = Modifier.padding(top = 16.dp), maxLines = 1)
+                Label("${Fa.num(ms.size)} عضو", 13, t.sub, FontWeight.Bold)
             }
 
             // Actions
             Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                val hidden = g.id in s.widgetHidden
                 ActionTile(Icons.Rounded.PersonAdd, "دعوت", t.acc, t.onAcc, Modifier.weight(1.4f), store::openInvite)
-                ActionTile(if (ad.muted) Icons.Rounded.NotificationsOff else Icons.Rounded.Notifications, if (ad.muted) "بی‌صدا شد" else "بی‌صدا", if (ad.muted) t.fg else t.tonal, if (ad.muted) t.bg else t.fg, Modifier.weight(1f), store::toggleMute)
-                ActionTile(if (ad.widgetsHidden) Icons.Rounded.HideSource else Icons.Rounded.Widgets, if (ad.widgetsHidden) "مخفی شد" else "ویجت‌ها", if (ad.widgetsHidden) t.fg else t.tonal, if (ad.widgetsHidden) t.bg else t.fg, Modifier.weight(1f), store::toggleWidgets)
+                ActionTile(if (g.muted) Icons.Rounded.NotificationsOff else Icons.Rounded.Notifications, if (g.muted) "بی‌صدا شد" else "بی‌صدا", if (g.muted) t.fg else t.tonal, if (g.muted) t.bg else t.fg, Modifier.weight(1f), store::toggleMute)
+                ActionTile(if (hidden) Icons.Rounded.HideSource else Icons.Rounded.Widgets, if (hidden) "مخفی شد" else "ویجت‌ها", if (hidden) t.fg else t.tonal, if (hidden) t.bg else t.fg, Modifier.weight(1f), store::toggleWidgets)
                 ActionTile(Icons.Rounded.QrCode2, "کد QR", t.tonal, t.fg, Modifier.weight(1f), store::openInvite)
-            }
-
-            // Join requests
-            if (ad.requests.isNotEmpty()) {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(top = 18.dp)
-                        .clip(RoundedCornerShape(26.dp))
-                        .background(t.card)
-                        .border(1.dp, t.line, RoundedCornerShape(26.dp))
-                        .padding(14.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Label("درخواست‌های عضویت", 15, t.fg, modifier = Modifier.weight(1f))
-                        Box(Modifier.size(22.dp).clip(CircleShape).background(Pink), contentAlignment = Alignment.Center) {
-                            Label(Fa.num(ad.requests.size), 12, Color.White, FontWeight.Black)
-                        }
-                    }
-                    ad.requests.forEach { r ->
-                        Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(44.dp)) {
-                                InitialAvatar(r.name.take(1), r.colorA, r.colorB, 44.dp)
-                                StatusChar(r.status, Modifier.align(Alignment.BottomEnd).offset(x = 8.dp, y = 6.dp).size(26.dp))
-                            }
-                            RowSpacer(10.dp)
-                            Column(Modifier.weight(1f)) {
-                                Label(r.name, 14, t.fg)
-                                Label("با کد · ${r.whenText}", 12, t.sub, FontWeight.Bold)
-                            }
-                            IconCircle(Icons.Rounded.Close, "رد", size = 40.dp, iconSize = 20.dp, onClick = { store.answerRequest(r.name, false) })
-                            RowSpacer(8.dp)
-                            Box(
-                                Modifier
-                                    .height(40.dp)
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(t.acc)
-                                    .pressTap { store.answerRequest(r.name, true) }
-                                    .padding(horizontal = 14.dp),
-                                contentAlignment = Alignment.Center,
-                            ) { Label("قبول", 13, t.onAcc, FontWeight.Black) }
-                        }
-                    }
-                }
             }
 
             SectionHeader("اعضا", "برای گزینه‌ها روی ⋮ بزن")
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 ms.forEach { m ->
-                    val admin = m.id in ad.admins
+                    val admin = m.admin
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -226,7 +171,7 @@ fun GroupScreen(store: AppStore) {
                             }
                             Label(m.text, 12, t.sub, FontWeight.Bold, maxLines = 1)
                         }
-                        if (m.id != AppStore.ME_ID) {
+                        if (!m.me && g.admin) {
                             IconCircle(Icons.Rounded.MoreVert, "گزینه‌ها", size = 40.dp, bg = Color.Transparent, tint = t.sub, onClick = { store.openMemberMenu(m.id) })
                         }
                     }
@@ -235,9 +180,11 @@ fun GroupScreen(store: AppStore) {
 
             Box(Modifier.padding(top = 16.dp)) {
                 SettingsGroup {
-                    SettingsRow(Icons.Rounded.Edit, "تغییر نام گروه", g.name) { store.toast("free", "تغییر نام بعد از اتصال به سرور فعال می‌شه") }
-                    SettingsRow(Icons.Rounded.Palette, "آیکون و رنگ", "بنفش") { }
-                    SettingsRow(Icons.Rounded.QrCode2, "کد دعوت", "$pretty · ${expiryText(ad.codeExpiry)}", onClick = store::openInvite)
+                    if (g.admin) {
+                        SettingsRow(Icons.Rounded.Edit, "تغییر نام گروه", g.name, onClick = store::openRename)
+                        SettingsRow(Icons.Rounded.Palette, "آیکون و رنگ", Catalog.groupColorNames[g.color.coerceIn(0, 4)], onClick = store::openRename)
+                        g.code?.let { c -> SettingsRow(Icons.Rounded.QrCode2, "کد دعوت", "${Fa.code(c)} · ${expiryText(g.codeTtl)}", onClick = store::openInvite) }
+                    }
                     SettingsRow(Icons.Rounded.AdminPanelSettings, "کی می‌تونه دعوت کنه", "مدیرها") { }
                 }
             }
@@ -261,6 +208,7 @@ fun GroupScreen(store: AppStore) {
         MemberMenu(store)
         RemoveConfirm(store)
         InviteSheet(store)
+        RenameSheet(store)
     }
 }
 
@@ -288,10 +236,10 @@ private fun ActionTile(icon: ImageVector, label: String, bg: Color, fg: Color, m
 private fun androidx.compose.foundation.layout.BoxScope.MemberMenu(store: AppStore) {
     val s = store.state
     val t = LocalTokens.current
-    val m = members(store).firstOrNull { it.id == s.admin.menuFor }
-    BottomSheet(m != null && !s.admin.confirmRemove, store::closeOverlays, horizontalPadding = 12) {
+    val m = members(store).firstOrNull { it.id == s.overlays.menuFor }
+    BottomSheet(m != null && !s.overlays.confirmRemove, store::closeOverlays, horizontalPadding = 12) {
         if (m == null) return@BottomSheet
-        val admin = m.id in s.admin.admins
+        val admin = m.admin
         Row(Modifier.padding(start = 12.dp, end = 12.dp, top = 18.dp, bottom = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(60.dp)) {
                 InitialAvatar(m.name.take(1), m.a, m.b, 60.dp)
@@ -300,12 +248,11 @@ private fun androidx.compose.foundation.layout.BoxScope.MemberMenu(store: AppSto
             RowSpacer(20.dp)
             Column {
                 Title(m.name, 22)
-                Label("${if (admin) "مدیر" else "عضو"} · از اسفند عضو شده", 13, t.sub)
+                Label(if (admin) "مدیر" else "عضو", 13, t.sub)
             }
         }
         MenuItem(if (admin) Icons.Rounded.RemoveModerator else Icons.Rounded.AddModerator, if (admin) "برداشتن مدیریت" else "مدیر کردن", t.fg, store::toggleAdmin)
         MenuItem(Icons.Rounded.TouchApp, "سقلمه", t.fg, store::pokeMember)
-        MenuItem(Icons.Rounded.NotificationsOff, "بی‌صدا کردن آپدیت‌هاش", t.fg, store::closeOverlays)
         MenuItem(Icons.Rounded.Person, "دیدن پروفایل", t.fg) { store.closeOverlays(); store.openFriend(m.id) }
         MenuItem(Icons.Rounded.PersonRemove, "حذف از گروه", Danger, store::askRemove)
     }
@@ -334,8 +281,8 @@ private fun MenuItem(icon: ImageVector, label: String, color: Color, onClick: ()
 private fun androidx.compose.foundation.layout.BoxScope.RemoveConfirm(store: AppStore) {
     val s = store.state
     val t = LocalTokens.current
-    val m = members(store).firstOrNull { it.id == s.admin.menuFor }
-    PopDialog(m != null && s.admin.confirmRemove, store::closeOverlays) {
+    val m = members(store).firstOrNull { it.id == s.overlays.menuFor }
+    PopDialog(m != null && s.overlays.confirmRemove, store::closeOverlays) {
         if (m == null) return@PopDialog
         Box(Modifier.size(110.dp, 96.dp)) {
             StatusChar(m.status, Modifier.align(Alignment.TopCenter).size(90.dp), idle = true)
@@ -343,7 +290,7 @@ private fun androidx.compose.foundation.layout.BoxScope.RemoveConfirm(store: App
         }
         Title("${m.name} حذف بشه؟", 22, modifier = Modifier.padding(top = 12.dp))
         Label(
-            "دیگه وضعیت‌ها و مکان‌های «${Catalog.group(s.activeGroup).name}» رو نمی‌بینه. با یه دعوت جدید می‌تونه برگرده.",
+            "دیگه وضعیت‌ها و مکان‌های «${s.activeGroup?.name ?: ""}» رو نمی‌بینه. با یه دعوت جدید می‌تونه برگرده.",
             14, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp),
         )
         Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -363,27 +310,33 @@ private fun androidx.compose.foundation.layout.BoxScope.RemoveConfirm(store: App
 private fun androidx.compose.foundation.layout.BoxScope.InviteSheet(store: AppStore) {
     val s = store.state
     val t = LocalTokens.current
-    val ad = s.admin
-    BottomSheet(ad.inviteOpen, store::closeOverlays, horizontalPadding = 20) {
+    val g = s.activeGroup
+    val code = g?.code
+    BottomSheet(s.overlays.inviteOpen && g != null, store::closeOverlays, horizontalPadding = 20) {
+        if (g == null) return@BottomSheet
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Title("دعوت به «${Catalog.group(s.activeGroup).name}»", 22, maxLines = 1)
-                Label("کد تا ${expiryText(ad.codeExpiry)} معتبره", 13, t.sub, FontWeight.Bold)
+                Title("دعوت به «${g.name}»", 22, maxLines = 1)
+                Label(if (code == null) "فقط مدیرها کد دعوت رو می‌بینن" else if (g.codeTtl == "never") "کد همیشه معتبره" else "کد تا ${expiryText(g.codeTtl)} معتبره", 13, t.sub, FontWeight.Bold)
             }
             IconCircle(Icons.Rounded.Close, "بستن", size = 40.dp, onClick = store::closeOverlays)
         }
+        if (code == null) {
+            Label("از یکی از مدیرهای گروه بخواه کد دعوت رو برات بفرسته.", 14, t.sub, FontWeight.Bold, Modifier.padding(top = 16.dp))
+            return@BottomSheet
+        }
         Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(150.dp).shadow(14.dp, RoundedCornerShape(28.dp)).clip(RoundedCornerShape(28.dp)).background(Color.White).padding(12.dp)) {
-                QrCode("https://fsl.live/j/${ad.code}", Modifier.fillMaxSize())
+                QrCode("https://fsl.live/j/$code", Modifier.fillMaxSize())
             }
             RowSpacer(14.dp)
             Column(Modifier.weight(1f)) {
                 Label("کد", 12, t.sub)
                 // Digits read left to right even inside the right-to-left layout.
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    Title(Fa.digits(ad.code.take(3) + " " + ad.code.drop(3)), 36, modifier = Modifier.padding(top = 2.dp))
+                    Title(Fa.digits(code.take(3) + " " + code.drop(3)), 36, modifier = Modifier.padding(top = 2.dp))
                 }
-                Label("fsl.live/j/${ad.code}", 13, t.vio, maxLines = 1, modifier = Modifier.padding(top = 4.dp).widthIn(max = 200.dp))
+                Label("fsl.live/j/$code", 13, t.vio, maxLines = 1, modifier = Modifier.padding(top = 4.dp).widthIn(max = 200.dp))
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -419,7 +372,7 @@ private fun androidx.compose.foundation.layout.BoxScope.InviteSheet(store: AppSt
             }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf("24h", "7d", "30d", "never").forEach { e ->
-                    val on = ad.codeExpiry == e
+                    val on = g.codeTtl == e
                     Box(
                         Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).background(if (on) t.fg else t.tonal).tap { store.setCodeExpiry(e) }.padding(vertical = 9.dp),
                         contentAlignment = Alignment.Center,

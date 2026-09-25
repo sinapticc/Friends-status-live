@@ -10,6 +10,16 @@ object Fa {
 
     fun num(n: Int): String = digits(n.toString())
 
+    /** Keeps codes like "۴۸۲ ۹۱۳" in reading order inside right-to-left text. */
+    fun ltr(s: String): String = "\u2066$s\u2069"
+
+    /** Invite code split in two halves, e.g. ۴۸۲ ۹۱۳. */
+    fun code(c: String): String = ltr(digits(c.take(3) + " " + c.drop(3)))
+
+    /** Distance label like "۲٫۳ کیلومتر". */
+    fun km(km: Double): String =
+        digits(if (km < 10) String.format(java.util.Locale.US, "%.1f", km).removeSuffix(".0") else Math.round(km).toString()) + " کیلومتر"
+
     fun ago(minutes: Int): String = when {
         minutes < 1 -> "همین الان"
         minutes < 60 -> "${num(minutes)} دقیقه پیش"

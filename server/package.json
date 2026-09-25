@@ -1,0 +1,17 @@
+{
+  "name": "fsl-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:local": "wrangler d1 migrations apply fsl --local",
+    "typecheck": "tsc --noEmit",
+    "test": "node test/api.test.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260925.2",
+    "typescript": "^5.9.0",
+    "wrangler": "^4.140.0"
+  }
+}

@@ -3,11 +3,13 @@ package com.sinapticc.friendsstatus.data
 import androidx.compose.ui.graphics.Color
 import com.sinapticc.friendsstatus.model.Friend
 import com.sinapticc.friendsstatus.model.HistoryItem
-import com.sinapticc.friendsstatus.model.JoinRequest
+import com.sinapticc.friendsstatus.model.GroupInfo
+import com.sinapticc.friendsstatus.model.MemberInfo
+import com.sinapticc.friendsstatus.model.ShareLevel
 
 /**
- * Sample friends and groups until a real backend is connected.
- * Everything here lives in memory only.
+ * Sample friends and groups for demo mode, used when the app is built without a server
+ * address. Everything here lives in memory only.
  */
 object FakeData {
     private fun h(vararg items: Triple<String, String, String>) = items.map { HistoryItem(it.first, it.second, it.third) }
@@ -16,7 +18,7 @@ object FakeData {
         Friend("arash", "آرش", setOf("flat", "uni"), "partying", "بیا کافه لافت", "کافه لافت", "۵٫۱ کیلومتر", 1,
             Color(0xFFC9B6FF), Color(0xFF8A6CFF),
             h(Triple("coffee", "اسپرسوی قبل مهمونی", "17:20"), Triple("gaming", "رنکدم. حرف نزنید", "15:02"), Triple("sleeping", "خمارم. معلومه", "11:30"))),
-        Friend("maryam", "مریم", setOf("flat", "uni", "one"), "toilet", "زنگ نزنید لطفاً", "خونه", "۱٫۲ کیلومتر", 4,
+        Friend("maryam", "مریم", setOf("flat", "uni", "pair-maryam"), "toilet", "زنگ نزنید لطفاً", "خونه", "۱٫۲ کیلومتر", 4,
             Color(0xFFFFC0D2), Color(0xFFFF7AA0),
             h(Triple("eating", "ناهار دوم", "14:10"), Triple("work", "این جلسه می‌تونست یه ایمیل باشه", "10:05"), Triple("sleeping", "فقط ۵ دقیقه دیگه", "07:40"))),
         Friend("saman", "سامان", setOf("flat", "gym"), "driving", "۵ دقیقه دیگه اونجام. قول", "اتوبان همت", "در حرکت", 8,
@@ -37,7 +39,7 @@ object FakeData {
         Friend("kaveh", "کاوه", setOf("gym"), "football", "۲–۱ بریم که داشته باشیم", "خونه", "۱٫۸ کیلومتر", 6,
             Color(0xFFC8F59A), Color(0xFF5FB814),
             h(Triple("gym", "روز سینه", "17:00"), Triple("eating", "شام بعد باشگاه", "18:10"))),
-        Friend("raha", "رها", setOf("one"), "cooking", "دارم غذای موردعلاقه‌تو می‌پزم", "خونه", "۰٫۴ کیلومتر", 3,
+        Friend("raha", "رها", setOf("pair-raha"), "cooking", "دارم غذای موردعلاقه‌تو می‌پزم", "خونه", "۰٫۴ کیلومتر", 3,
             Color(0xFFFFE6A0), Color(0xFFFFB13D),
             h(Triple("walking", "رفتم خرید", "17:40"), Triple("work", "آخرین تماس، قول", "15:00"))),
         Friend("maman", "مامان", setOf("fam"), "meditating", "یوگا، بعد زنگ می‌زنم", "خونه", "۴۲ کیلومتر", 34,
@@ -48,10 +50,20 @@ object FakeData {
             h(Triple("driving", "تو جاده‌ی چالوس", "10:30"))),
     )
 
-    val requests: List<JoinRequest> = listOf(
-        JoinRequest("نوید", "free", "۲ دقیقه پیش", Color(0xFFB8D8FF), Color(0xFF4F86FF)),
-        JoinRequest("الناز", "inlove", "۱ ساعت پیش", Color(0xFFFFD0E6), Color(0xFFFF5CA8)),
-    )
+    val groups: List<GroupInfo> by lazy {
+        fun members(vararg ids: String) = ids.map { id ->
+            if (id == AppStore.ME_ID) MemberInfo(id, "سام", 2, true)
+            else friends.first { it.id == id }.let { MemberInfo(it.id, it.name, 0, id == "arash") }
+        }
+        listOf(
+            GroupInfo("flat", "هم‌خونه‌ها", "home", 0, false, true, ShareLevel.Exact, false, "482913", "7d", members(AppStore.ME_ID, "arash", "maryam", "saman", "kian")),
+            GroupInfo("uni", "بچه‌های دانشگاه", "school", 3, false, false, ShareLevel.Approx, false, null, "7d", members(AppStore.ME_ID, "arash", "maryam", "pariya", "zhina")),
+            GroupInfo("gym", "رفقای باشگاه", "fitness", 2, false, false, ShareLevel.Approx, false, null, "7d", members(AppStore.ME_ID, "saman", "nima", "kaveh")),
+            GroupInfo("fam", "خانواده", "family", 1, false, false, ShareLevel.StatusOnly, false, null, "7d", members(AppStore.ME_ID, "maman", "baba")),
+            GroupInfo("pair-maryam", "مریم", "favorite", 1, true, false, ShareLevel.Exact, false, null, "never", members(AppStore.ME_ID, "maryam")),
+            GroupInfo("pair-raha", "رها", "favorite", 1, true, false, ShareLevel.Exact, false, null, "never", members(AppStore.ME_ID, "raha")),
+        )
+    }
 
     /** Status changes the live simulation picks from. */
     val livePool = listOf(

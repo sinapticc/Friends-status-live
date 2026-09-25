@@ -2,6 +2,7 @@ name: Android build
 
 on:
   push:
+    paths-ignore: ["server/**", ".github/workflows/server.yml"]
   pull_request:
   workflow_dispatch:
 
@@ -15,7 +16,14 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
+      - name: Firebase config (optional)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; fi
       - name: Build debug APK
+        env:
+          # Server address; empty builds the demo version with sample data.
+          FSL_API_URL: ${{ vars.FSL_API_URL }}
         run: ./gradlew --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:

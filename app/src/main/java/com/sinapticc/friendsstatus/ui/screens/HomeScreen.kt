@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.NearMe
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.PersonAdd
 import androidx.compose.material.icons.rounded.Settings
@@ -75,7 +76,8 @@ fun HomeScreen(store: AppStore) {
     val s = store.state
     val t = LocalTokens.current
     val friends = s.visibleFriends
-    val cur = Catalog.group(s.group)
+    val active = s.activeGroup
+    val title = when (s.group) { "all" -> "همه"; "pairs" -> "دونفره"; else -> s.groups.firstOrNull { it.id == s.group }?.name ?: "همه" }
     Box(Modifier.fillMaxSize()) {
         ScrollScreen(bottom = NavHeight + 100.dp) {
             // Header: current group pill + actions
@@ -84,7 +86,7 @@ fun HomeScreen(store: AppStore) {
                     Modifier
                         .clip(RoundedCornerShape(99.dp))
                         .background(t.tonal)
-                        .tap { store.go(Screen.Group) }
+                        .tap { if (active != null) store.go(Screen.Group) else store.openAdd() }
                         .padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -93,25 +95,12 @@ fun HomeScreen(store: AppStore) {
                             InitialAvatar(f.name.take(1), f.colorA, f.colorB, 26.dp, Modifier.offset(x = (-8).dp), ring = t.ring)
                         }
                     }
-                    Label(if (s.group == "all") "همه" else cur.name, 14, t.fg)
+                    Label(title, 14, t.fg, maxLines = 1, modifier = Modifier.widthIn(max = 140.dp))
                     RowSpacer(6.dp)
                     Icon(Icons.Rounded.Settings, "تنظیمات گروه", Modifier.size(18.dp), tint = t.fg.copy(alpha = .7f))
                 }
                 Box(Modifier.weight(1f))
-                IconCircle(Icons.Rounded.PersonAdd, "دعوت دوست", onClick = { store.go(Screen.Group); store.openInvite() })
-                RowSpacer(8.dp)
-                Box {
-                    IconCircle(Icons.Rounded.Notifications, "اعلان‌ها", onClick = { store.toast("free", "اعلان تازه‌ای نداری") })
-                    Box(
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 9.dp, end = 10.dp)
-                            .size(9.dp)
-                            .clip(CircleShape)
-                            .background(Pink)
-                            .border(2.dp, t.bg, CircleShape)
-                    )
-                }
+                IconCircle(Icons.Rounded.PersonAdd, "افزودن گروه یا رفیق", onClick = store::openAdd)
             }
 
             // Headline
@@ -133,7 +122,15 @@ fun HomeScreen(store: AppStore) {
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Catalog.groups.forEach { g ->
+                val chips = buildList {
+                    add(Chip("all", Catalog.allChip.name, Catalog.allChip.icon, Catalog.allChip.colorA, Catalog.allChip.colorB))
+                    s.realGroups.forEach { g ->
+                        val (a, b) = Catalog.groupColors[g.color.coerceIn(0, Catalog.groupColors.lastIndex)]
+                        add(Chip(g.id, g.name, Catalog.groupIcon(g.icon), a, b))
+                    }
+                    if (s.pairIds.isNotEmpty()) add(Chip("pairs", Catalog.pairsChip.name, Catalog.pairsChip.icon, Catalog.pairsChip.colorA, Catalog.pairsChip.colorB))
+                }
+                chips.forEach { g ->
                     val on = s.group == g.key
                     val bg by animateColorAsState(if (on) t.acc else t.tonal, label = "chip")
                     Row(
@@ -146,18 +143,20 @@ fun HomeScreen(store: AppStore) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(
-                            Modifier.size(32.dp).clip(RoundedCornerShape(12.dp)).background(Brush.linearGradient(listOf(g.colorA, g.colorB))),
+                            Modifier.size(32.dp).clip(RoundedCornerShape(12.dp)).background(Brush.linearGradient(listOf(g.a, g.b))),
                             contentAlignment = Alignment.Center,
                         ) { Icon(g.icon, null, Modifier.size(18.dp), tint = Ink) }
                         RowSpacer(8.dp)
-                        Label(g.name, 14, if (on) t.onAcc else t.fg, FontWeight.Black)
+                        Label(g.name, 14, if (on) t.onAcc else t.fg, FontWeight.Black, maxLines = 1)
                     }
                 }
             }
 
             MyStatusHero(store)
 
-            if (s.group == "one") {
+            if (s.friends.isEmpty()) {
+                EmptyFriends(store)
+            } else if (s.group == "pairs") {
                 SectionHeader("فقط شما دو نفر", "${Fa.num(friends.size)} فضای خصوصی")
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     friends.forEach { f -> OneOnOneCard(store, f) }
@@ -187,6 +186,28 @@ fun HomeScreen(store: AppStore) {
             StatusChar(s.me.key, Modifier.size(46.dp), hue = s.me.hue, acc = s.me.acc, bounceKey = s.me)
             RowSpacer(8.dp)
             Label("وضعیت بذار", 16, t.onAcc, FontWeight.Black)
+        }
+    }
+}
+
+private data class Chip(val key: String, val name: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val a: Color, val b: Color)
+
+@Composable
+private fun EmptyFriends(store: AppStore) {
+    val t = LocalTokens.current
+    Card(Modifier.fillMaxWidth().padding(top = 24.dp), radius = 30.dp, padding = 20.dp) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            StatusChar("bored", Modifier.size(96.dp), idle = true)
+            Title("هنوز تنهایی!", 22, modifier = Modifier.padding(top = 8.dp))
+            Label("رفقات رو با کد گروه دعوت کن تا وضعیتشون این‌جا بیاد.", 14, t.sub, FontWeight.Bold, Modifier.padding(top = 6.dp))
+            Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.weight(1f)) {
+                    com.sinapticc.friendsstatus.ui.components.PrimaryButton("دعوت رفقا", { if (store.state.activeGroup != null) { store.go(Screen.Group); store.openInvite() } else store.openAdd() }, height = 52.dp, fontSize = 15)
+                }
+                Box(Modifier.weight(1f)) {
+                    com.sinapticc.friendsstatus.ui.components.TonalButton("وارد کردن کد", store::openAdd, height = 52.dp, fontSize = 15)
+                }
+            }
         }
     }
 }
@@ -226,9 +247,9 @@ private fun MyStatusHero(store: AppStore) {
         }
         RowSpacer(14.dp)
         Column(Modifier.weight(1f)) {
-            Label("تو · ${Catalog.label(me.key)}", 12, Color.White.copy(alpha = .75f))
+            Label(if (me.since.isEmpty()) "تو" else "تو · ${Catalog.label(me.key)}", 12, Color.White.copy(alpha = .75f))
             Title("«${me.text}»", 19, Color.White, Modifier.padding(top = 2.dp), maxLines = 2)
-            Label("از ${Fa.digits(me.since)} · برای «${Catalog.group(s.activeGroup).name}»", 12, Color.White.copy(alpha = .75f), FontWeight.Bold, Modifier.padding(top = 4.dp))
+            Label(if (me.since.isEmpty()) "بزن تا اولین وضعیتت رو بذاری" else "از ${Fa.digits(me.since)} · برای همه‌ی رفقات", 12, Color.White.copy(alpha = .75f), FontWeight.Bold, Modifier.padding(top = 4.dp))
         }
         RowSpacer(8.dp)
         IconCircle(Icons.Rounded.Edit, "تغییر وضعیت", size = 40.dp, bg = Color.White.copy(alpha = .2f), tint = Color.White)
@@ -254,12 +275,14 @@ fun FriendRow(f: Friend, onClick: () -> Unit) {
             Column(Modifier.weight(1f).padding(end = 4.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Label(f.name, 17, t.fg, modifier = Modifier.weight(1f))
-                    Label(Fa.ago(f.minutesAgo), 12, if (f.minutesAgo < 5) t.live else t.sub)
+                    if (f.minutesAgo < 9999) Label(Fa.ago(f.minutesAgo), 12, if (f.minutesAgo < 5) t.live else t.sub)
                 }
                 Label(f.text, 15, t.fg, maxLines = 1, modifier = Modifier.padding(top = 1.dp))
-                Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    InfoPill(f.place, icon = placeIcon(f.place))
-                    InfoPill(f.distance)
+                if (f.place.isNotEmpty() || f.distance.isNotEmpty()) {
+                    Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (f.place.isNotEmpty()) InfoPill(f.place, icon = placeIcon(f.place))
+                        if (f.distance.isNotEmpty()) InfoPill(f.distance, icon = if (f.place.isEmpty()) Icons.Rounded.NearMe else null)
+                    }
                 }
             }
         }
@@ -283,7 +306,7 @@ private fun OneOnOneCard(store: AppStore, f: Friend) {
                 Person(Modifier.weight(1f), f.name, f.text) { StatusChar(f.status, Modifier.size(84.dp)) }
             }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
-                InfoPill("${f.distance} فاصله")
+                if (f.distance.isNotEmpty()) InfoPill("${f.distance} فاصله")
                 InfoPill(Fa.ago(f.minutesAgo))
             }
         }

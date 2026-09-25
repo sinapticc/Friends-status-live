@@ -8,3 +8,4 @@ build/
 .externalNativeBuild
 .cxx
 node_modules/
+/app/google-services.json
