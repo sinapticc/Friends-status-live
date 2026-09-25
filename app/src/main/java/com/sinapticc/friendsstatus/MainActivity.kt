@@ -39,7 +39,7 @@ import com.sinapticc.friendsstatus.android.LiveBus
 import com.sinapticc.friendsstatus.android.Push
 import com.sinapticc.friendsstatus.android.Sync
 import com.sinapticc.friendsstatus.android.WidgetData
-import com.sinapticc.friendsstatus.android.prefs
+import com.sinapticc.friendsstatus.android.prefs as sharedPrefs
 import com.sinapticc.friendsstatus.data.AppStore
 import com.sinapticc.friendsstatus.data.FeedDto
 import kotlinx.coroutines.CoroutineScope
@@ -149,7 +149,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 class AndroidPlatform(private val app: Application) : Platform {
     var activity: MainActivity? = null
 
-    private val sp = prefs(app)
+    private val sp = sharedPrefs(app)
     private val io = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override val apiUrl: String = BuildConfig.API_URL
