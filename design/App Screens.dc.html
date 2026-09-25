@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Nunito:wght@500;700;800;900&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#07050c;color:#f4f0ff;font-family:Nunito,system-ui,sans-serif}a{color:#c8f542}a:hover{color:#e4ff9a}</style>
+</helmet>
+<section id="t1" style="padding:56px 56px 48px;border-bottom:1px solid rgba(255,255,255,.08);background:#07050c">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px"><a href="#t1" style="font:700 11px ui-monospace,Menlo,monospace;padding:3px 8px;background:#c8f542;color:#1c1330;border-radius:5px;text-decoration:none">4</a><span style="font:800 28px Unbounded;letter-spacing:-.01em">Core screens · dark</span></div>
+  <p style="margin:0 0 32px;max-width:760px;font:600 15px/1.55 Nunito;color:rgba(244,240,255,.62)">Feed, status picker, map, friend detail, privacy. Open <a href="Prototype.dc.html">Prototype</a> to tap through them.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+    <div id="4a" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#4a" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">4a</a> Home feed</div><dc-import name="App" screen="home" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="4b" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#4b" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">4b</a> Status picker sheet</div><dc-import name="App" screen="home" sheet="true" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="4c" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#4c" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">4c</a> Map</div><dc-import name="App" screen="map" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="4d" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#4d" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">4d</a> Friend detail</div><dc-import name="App" screen="friend" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="4e" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#4e" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">4e</a> Privacy</div><dc-import name="App" screen="privacy" live="false" hint-size="432px,912px"></dc-import></div>
+  </div>
+</section>
+<section id="t2" style="padding:56px 56px 48px;border-bottom:1px solid rgba(255,255,255,.08);background:#07050c">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px"><a href="#t2" style="font:700 11px ui-monospace,Menlo,monospace;padding:3px 8px;background:#c8f542;color:#1c1330;border-radius:5px;text-decoration:none">5</a><span style="font:800 28px Unbounded;letter-spacing:-.01em">Light mode</span></div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;margin-top:24px">
+    <div id="5a" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#5a" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">5a</a> Home feed</div><dc-import name="App" screen="home" theme="light" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="5b" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#5b" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">5b</a> Status picker</div><dc-import name="App" screen="home" sheet="true" theme="light" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="5c" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#5c" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">5c</a> Map</div><dc-import name="App" screen="map" theme="light" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="5d" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#5d" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">5d</a> Friend detail</div><dc-import name="App" screen="friend" theme="light" live="false" hint-size="432px,912px"></dc-import></div>
+  </div>
+</section>
+<section id="t3" style="padding:56px 56px 64px;background:#07050c">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px"><a href="#t3" style="font:700 11px ui-monospace,Menlo,monospace;padding:3px 8px;background:#c8f542;color:#1c1330;border-radius:5px;text-decoration:none">6</a><span style="font:800 28px Unbounded;letter-spacing:-.01em">Onboarding</span></div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;margin-top:24px">
+    <div id="6a" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#6a" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">6a</a> Intro</div><dc-import name="App" screen="onb1" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="6b" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#6b" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">6b</a> Join with code</div><dc-import name="App" screen="onb2" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="6c" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#6c" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">6c</a> Avatar + nickname</div><dc-import name="App" screen="onb3" live="false" hint-size="432px,912px"></dc-import></div>
+    <div id="6d" style="display:flex;flex-direction:column;gap:10px"><div style="font:700 12px Nunito;color:rgba(244,240,255,.55)"><a href="#6d" style="font:700 11px ui-monospace,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#fff;border-radius:5px;text-decoration:none">6d</a> Location, explained</div><dc-import name="App" screen="onb4" live="false" hint-size="432px,912px"></dc-import></div>
+  </div>
+</section>
+</x-dc>
+</body>
+</html>

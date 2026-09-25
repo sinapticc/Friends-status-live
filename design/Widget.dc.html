@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Nunito:wght@500;700;800;900&family=Doto:wght@700;900&display=swap" rel="stylesheet">
+<script src="./fsl-chars.js"></script>
+<script src="./fsl-chars-a.js"></script>
+<script src="./fsl-chars-b.js"></script>
+<script src="./fsl-chars-c.js"></script>
+</helmet>
+<div style="--bg:{{ t.bg }};--fg:{{ t.fg }};--sub:{{ t.sub }};--acc:{{ t.acc }};--tile:{{ t.tile }};--line:{{ t.line }};--disp:{{ t.disp }};--aura:{{ t.aura }};--grain:{{ t.grain }};--cfx:{{ t.cfx }};--sh:{{ t.sh }};--ring:{{ ring }};position:relative;box-sizing:border-box;width:{{ w }}px;height:{{ h }}px;border-radius:{{ r }}px;background:{{ rootBg }};color:{{ rootFg }};overflow:hidden;font-family:Nunito,system-ui,sans-serif;box-shadow:var(--sh);border:1px solid var(--line)">
+  <div style="position:absolute;inset:0;background:var(--aura);pointer-events:none"></div>
+  <div style="position:absolute;inset:0;opacity:var(--grain);mix-blend-mode:overlay;pointer-events:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E&quot;)"></div>
+
+  <sc-if value="{{ is1x1 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+      <div style="display:flex;padding-left:11px">
+        <sc-for list="{{ stack3 }}" as="f" hint-placeholder-count="3">
+          <div style="width:30px;height:30px;margin-left:-11px;border-radius:50%;background:{{ f.av }};border:2px solid var(--ring);display:flex;align-items:center;justify-content:center;font:800 12px Unbounded;color:#1c1330">{{ f.i }}</div>
+        </sc-for>
+      </div>
+      <div style="padding:2px 8px;border-radius:99px;background:var(--acc);color:{{ t.onAcc }};font:900 11px Nunito">3 new</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ is2x1 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:relative;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 12px;gap:6px">
+      <div style="display:flex;padding-left:10px">
+        <sc-for list="{{ stack3 }}" as="f" hint-placeholder-count="3">
+          <div style="position:relative;width:36px;height:36px;margin-left:-10px;border-radius:50%;background:{{ f.av }};border:2.5px solid var(--ring);display:flex;align-items:center;justify-content:center;font:800 13px Unbounded;color:#1c1330">{{ f.i }}<fsl-char c="{{ f.c }}" style="position:absolute;right:-7px;bottom:-7px;width:22px;height:22px;display:block"></fsl-char></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div style="padding:3px 9px;border-radius:99px;background:var(--acc);color:{{ t.onAcc }};font:900 12px Nunito;white-space:nowrap">3 new</div>
+        <div style="display:flex;align-items:center;gap:5px;font:800 10px Nunito;color:var(--sub);letter-spacing:.04em"><fsl-live size="6" style="color:var(--acc)"></fsl-live>LIVE</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ is2x2 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:relative;height:100%;box-sizing:border-box;padding:14px 16px 14px;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:6px;font:800 10px Nunito;letter-spacing:.06em;opacity:.8"><fsl-live size="7" style="color:{{ liveDot }}"></fsl-live>LIVE</div>
+        <div style="font:800 11px var(--disp);opacity:.75">{{ one.t }}</div>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0"><fsl-char c="{{ one.c }}" idle="" style="width:84px;height:84px;display:block;filter:var(--cfx)"></fsl-char></div>
+      <div style="font:800 16px/1.1 var(--disp);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ one.n }}</div>
+      <div style="margin-top:3px;font:800 12.5px/1.2 Nunito;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ one.s }}</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasHeader }}" hint-placeholder-val="{{ false }}">
+    <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:14px 18px 0">
+      <div style="display:flex;align-items:center;gap:8px;font:800 13px var(--disp);letter-spacing:-.01em"><fsl-live size="7" style="color:var(--acc)"></fsl-live>Friends status live</div>
+      <div style="font:800 11px Nunito;color:var(--sub)">{{ groupName }}</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ is4x2 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:12px 12px 12px">
+      <sc-for list="{{ four }}" as="f" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px 9px;border-radius:20px;background:{{ f.tile }};color:{{ f.tileFg }}">
+          <div style="position:relative;width:46px;height:46px">
+            <div style="width:46px;height:46px;border-radius:50%;background:{{ f.av }};display:flex;align-items:center;justify-content:center;font:800 17px Unbounded;color:#1c1330;box-shadow:inset 0 -3px 6px rgba(0,0,0,.18),inset 0 2px 3px rgba(255,255,255,.5)">{{ f.i }}</div>
+            <fsl-char c="{{ f.c }}" style="position:absolute;right:-12px;top:-10px;width:36px;height:36px;display:block;filter:var(--cfx)"></fsl-char>
+          </div>
+          <div style="font:800 12.5px Nunito;line-height:1.1;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }}</div>
+          <div style="font:700 10.5px Nunito;line-height:1.15;opacity:.7;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.s }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ is4x3 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px">
+      <sc-for list="{{ six }}" as="f" hint-placeholder-count="6">
+        <div style="position:relative;display:flex;flex-direction:column;gap:1px;padding:8px 10px 8px;border-radius:20px;background:{{ f.tile }};color:{{ f.tileFg }};min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start"><fsl-char c="{{ f.c }}" style="width:36px;height:36px;display:block;margin:-2px 0 0 -2px;filter:var(--cfx)"></fsl-char><span style="font:800 10px var(--disp);opacity:.6">{{ f.t }}</span></div>
+          <div style="font:800 13px Nunito;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }}</div>
+          <div style="font:700 10.5px Nunito;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.s }}</div>
+          <div style="font:800 9.5px Nunito;opacity:.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.l }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ is4x4 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:relative;display:flex;flex-direction:column;gap:4px;padding:10px 10px 12px">
+      <sc-for list="{{ six }}" as="f" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;gap:10px;padding:5px 12px 5px 6px;border-radius:18px;background:{{ f.tile }};color:{{ f.tileFg }}">
+          <div style="position:relative;width:40px;height:40px;flex:none"><fsl-char c="{{ f.c }}" style="width:40px;height:40px;display:block;filter:var(--cfx)"></fsl-char><div style="position:absolute;left:-2px;bottom:-2px;width:17px;height:17px;border-radius:50%;background:{{ f.av }};border:2px solid var(--ring);font:800 8px/17px Unbounded;text-align:center;color:#1c1330">{{ f.i }}</div></div>
+          <div style="flex:1;min-width:0"><div style="font:800 13.5px Nunito;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.n }} <span style="font-weight:700;opacity:.65">· {{ f.s }}</span></div><div style="font:800 10.5px Nunito;opacity:.5;margin-top:1px">{{ f.l }}</div></div>
+          <div style="font:800 10.5px var(--disp);opacity:.6;flex:none">{{ f.t }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:400,&quot;height&quot;:400},&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1x1&quot;,&quot;2x1&quot;,&quot;2x2&quot;,&quot;4x2&quot;,&quot;4x3&quot;,&quot;4x4&quot;],&quot;default&quot;:&quot;4x2&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;look&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;glow&quot;,&quot;sticker&quot;,&quot;mono&quot;,&quot;you&quot;,&quot;youLight&quot;,&quot;light&quot;],&quot;default&quot;:&quot;glow&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tint&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#8fb08a&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;friend&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;},&quot;group&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;The Flat&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const size = this.props.size ?? '4x2', look = this.props.look ?? 'glow', tint = this.props.tint ?? '#8fb08a';
+    const dims = { '1x1':[76,76,24], '2x1':[172,76,28], '2x2':[172,172,28], '4x2':[356,172,28], '4x3':[356,266,28], '4x4':[356,360,28] }[size] || [356,172,28];
+    const F = [
+      ['Maya','toilet','do not call me','Home','4m','#ffb3c8','#ff7aa0'],
+      ['Léo','partying','come to Loft 9','5.1 km','1m','#b9a2ff','#8a6cff'],
+      ['Jonas','gym','leg day. pray 4 me','FitX Mitte','12m','#9fe6ff','#4fb6ff'],
+      ['Priya','studying','0 pages, 3 coffees','Uni library','26m','#ffd98a','#ffab3d'],
+      ['Tomás','driving','5 min away. promise','Moving · A100','8m','#a8f5c9','#3fcf8a'],
+      ['Aiko','sleeping','do not wake','Home','2h','#e6c9ff','#b98cff'],
+    ];
+    const candy = ['#ff9cc8','#c3b0ff','#8fdcff','#ffcf6e','#9ff0c3','#e3ff6b'];
+    const noise = 'radial-gradient(90% 70% at 0% 0%,rgba(150,110,255,.38),transparent 60%),radial-gradient(70% 70% at 110% 110%,rgba(255,92,168,.22),transparent 60%)';
+    const T = {
+      glow:{bg:'linear-gradient(160deg,#1d1530,#0e0a17)',fg:'#f6f2ff',sub:'rgba(246,242,255,.58)',acc:'#c8f542',onAcc:'#1c1330',tile:'rgba(255,255,255,.07)',line:'rgba(255,255,255,.1)',disp:'Unbounded',aura:noise,grain:'.22',cfx:'drop-shadow(0 4px 6px rgba(0,0,0,.35))',sh:'0 20px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08)'},
+      sticker:{bg:'#241656',fg:'#ffffff',sub:'rgba(255,255,255,.65)',acc:'#e3ff6b',onAcc:'#1c1330',tile:'',line:'rgba(255,255,255,.06)',disp:'Unbounded',aura:'radial-gradient(80% 60% at 100% 0%,rgba(255,120,200,.3),transparent 60%)',grain:'.18',cfx:'drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff) drop-shadow(0 3px 3px rgba(0,0,0,.3))',sh:'0 20px 50px rgba(20,10,60,.5)'},
+      mono:{bg:'#0b0b0c',fg:'#f2f2f2',sub:'#8d8d93',acc:'#ff4b3a',onAcc:'#fff',tile:'#17171a',line:'rgba(255,255,255,.08)',disp:'Doto',aura:'radial-gradient(circle at 1px 1px,rgba(255,255,255,.09) 1px,transparent 1.3px) 0 0/8px 8px',grain:'0',cfx:'grayscale(0)',sh:'0 20px 50px rgba(0,0,0,.5)'},
+      you:{bg:`color-mix(in oklch, ${tint} 34%, #121214)`,fg:`color-mix(in oklch, ${tint} 14%, #ffffff)`,sub:`color-mix(in oklch, ${tint} 40%, #b8b8b8)`,acc:`color-mix(in oklch, ${tint} 75%, #ffffff)`,onAcc:`color-mix(in oklch, ${tint} 40%, #0d0d0d)`,tile:`color-mix(in oklch, ${tint} 22%, #26262a)`,line:'transparent',disp:'Unbounded',aura:'none',grain:'0',cfx:'drop-shadow(0 3px 4px rgba(0,0,0,.3))',sh:'0 10px 30px rgba(0,0,0,.3)'},
+      youLight:{bg:`color-mix(in oklch, ${tint} 26%, #fbfbf8)`,fg:`color-mix(in oklch, ${tint} 35%, #15151a)`,sub:`color-mix(in oklch, ${tint} 40%, #555)`,acc:`color-mix(in oklch, ${tint} 70%, #1d1d1d)`,onAcc:'#fff',tile:`color-mix(in oklch, ${tint} 14%, #ffffff)`,line:'transparent',disp:'Unbounded',aura:'none',grain:'0',cfx:'drop-shadow(0 3px 4px rgba(0,0,0,.18))',sh:'0 10px 30px rgba(0,0,0,.12)'},
+      light:{bg:'linear-gradient(160deg,#fffdfa,#f3eee7)',fg:'#1c1330',sub:'rgba(28,19,48,.6)',acc:'#6a3cff',onAcc:'#fff',tile:'#ffffff',line:'rgba(28,19,48,.06)',disp:'Unbounded',aura:'radial-gradient(80% 60% at 0% 0%,rgba(160,130,255,.18),transparent 60%),radial-gradient(60% 60% at 100% 100%,rgba(200,245,66,.25),transparent 60%)',grain:'.12',cfx:'drop-shadow(0 4px 5px rgba(60,30,120,.18))',sh:'0 16px 40px rgba(60,30,120,.14),inset 0 1px 0 #fff'}
+    };
+    const t = T[look] || T.glow;
+    const fr = F.map(([n,c,s,l,tm,a1,a2],i)=>({n,c,s,l,t:tm,i:n[0],av:`linear-gradient(145deg,${a1},${a2})`,
+      tile: look==='sticker'?candy[i]:t.tile, tileFg: look==='sticker'?'#1c1330':t.fg}));
+    const off = this.props.friend ?? 0;
+    const one = fr[off % fr.length];
+    const stickerOne = look==='sticker' && size==='2x2';
+    return {
+      ring: ({glow:'#1a1326',sticker:'#241656',mono:'#141416',light:'#ffffff'})[look] || t.bg,
+      t, w:dims[0], h:dims[1], r:dims[2],
+      rootBg: stickerOne ? candy[off % candy.length] : t.bg,
+      rootFg: stickerOne ? '#1c1330' : t.fg,
+      liveDot: stickerOne ? '#1c1330' : t.acc,
+      is1x1:size==='1x1', is2x1:size==='2x1', is2x2:size==='2x2', is4x2:size==='4x2', is4x3:size==='4x3', is4x4:size==='4x4',
+      hasHeader: ['4x2','4x3','4x4'].includes(size),
+      groupName: this.props.group ?? 'The Flat',
+      one, four: fr.slice(0,4), six: fr, stack3: fr.slice(0,3), stack4: fr.slice(0,4)
+    };
+  }
+}
+</script>
+</body>
+</html>

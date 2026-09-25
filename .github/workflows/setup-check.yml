@@ -1,0 +1,25 @@
+name: Setup script
+
+# Proves scripts/setup.sh works from scratch (fresh SDK folder), so agents can rely on it.
+on:
+  push:
+    paths: ["scripts/**", ".github/workflows/setup-check.yml"]
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: ${{ github.workspace }}/../fresh-android-sdk
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/../fresh-android-sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: ./scripts/setup.sh
+      - run: ./gradlew --no-daemon assembleDebug

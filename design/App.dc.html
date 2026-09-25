@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Nunito:wght@500;700;800;900&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<script src="./fsl-chars.js"></script>
+<script src="./fsl-chars-a.js"></script>
+<script src="./fsl-chars-b.js"></script>
+<script src="./fsl-chars-c.js"></script>
+<script src="./fsl-chars-d.js"></script>
+<script src="./fsl-chars-e.js"></script>
+<script src="./fsl-chars-f.js"></script>
+<script src="./fsl-chars-v.js"></script>
+<script src="./fsl-chars-me.js"></script>
+<script src="./fsl-qr.js"></script>
+<script src="./image-slot.js"></script>
+<style>body{margin:0;background:#07050c;font-family:Nunito,system-ui,sans-serif}a{color:#c8f542}a:hover{color:#e4ff9a}@keyframes fslUp{from{transform:translateY(100%)}to{transform:none}}@keyframes fslFade{from{opacity:0}}@keyframes fslPop{from{transform:translateY(-50%) scale(.7);opacity:0}}@keyframes fslDrop{from{transform:translate(-50%,-80px) scale(.6)}}input::placeholder{color:currentColor;opacity:.4}</style>
+</helmet>
+<div style="width:{{ frameW }}px;height:{{ frameH }}px;padding:{{ bezel }}px;box-sizing:border-box;border-radius:54px;background:#050407;box-shadow:{{ frameShadow }}">
+<div data-screen-label="{{ screenLabel }}" style="--bg:{{ t.bg }};--fg:{{ t.fg }};--sub:{{ t.sub }};--card:{{ t.card }};--line:{{ t.line }};--acc:{{ t.acc }};--onacc:{{ t.onAcc }};--tonal:{{ t.tonal }};--nav:{{ t.nav }};--vio:{{ t.vio }};--sheet:{{ t.sheet }};position:relative;width:412px;height:892px;border-radius:44px;overflow:hidden;background:var(--bg);color:var(--fg);font-family:Nunito,system-ui,sans-serif">
+  <div style="position:absolute;inset:0;background:{{ t.aura }};pointer-events:none"></div>
+  <div style="position:absolute;inset:0;opacity:{{ t.grain }};mix-blend-mode:overlay;pointer-events:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E&quot;)"></div>
+
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding:52px 16px 190px;box-sizing:border-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px 0">
+        <div onClick="{{ openGroup }}" style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:99px;background:var(--tonal);cursor:pointer">
+          <div style="display:flex;padding-left:8px"><sc-for list="{{ friendsTop }}" as="f" hint-placeholder-count="4"><div style="width:26px;height:26px;margin-left:-8px;border-radius:50%;background:{{ f.av }};border:2px solid {{ t.ring }};font:800 10px/26px Unbounded;text-align:center;color:#1c1330">{{ f.i }}</div></sc-for></div>
+          <span style="font:800 14px Nunito">{{ curGroup.name }}</span><span style="font-family:'Material Symbols Rounded';font-size:18px;opacity:.7">settings</span>
+        </div>
+        <div style="display:flex;gap:8px"><div style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px">person_add</div><div style="position:relative;width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px">notifications<span style="position:absolute;top:9px;right:10px;width:9px;height:9px;border-radius:50%;background:#ff5c8a;border:2px solid var(--bg)"></span></div></div>
+      </div>
+      <div style="padding:22px 4px 16px"><div style="display:flex;align-items:center;gap:8px;font:800 12px Nunito;letter-spacing:.1em;color:var(--sub)"><fsl-live size="8" style="color:{{ t.live }}"></fsl-live>{{ liveCount }} LIVE NOW</div><div style="margin-top:8px;font:800 34px/1.02 Unbounded;letter-spacing:-.025em">What’s the<br>squad up to</div></div>
+      <div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 16px;padding:0 16px">
+        <sc-for list="{{ chips }}" as="ch" hint-placeholder-count="6">
+          <div onClick="{{ ch.go }}" style="flex:none;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 6px;border-radius:22px;background:{{ ch.bg }};color:{{ ch.fg }};font:900 14px Nunito;cursor:pointer;transition:background .25s,transform .35s cubic-bezier(.3,1.6,.5,1)" style-active="transform:scale(.92)"><span style="width:32px;height:32px;border-radius:12px;background:{{ ch.iconBg }};display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:18px;color:#1c1330;font-variation-settings:'FILL' 1">{{ ch.icon }}</span>{{ ch.name }}</div>
+        </sc-for>
+      </div>
+
+      <div onClick="{{ openSheet }}" style="position:relative;display:flex;align-items:center;gap:14px;padding:14px 16px 14px 12px;border-radius:32px;background:{{ t.hero }};color:#fff;box-shadow:0 20px 40px rgba(90,40,180,.3),inset 0 1px 0 rgba(255,255,255,.25);cursor:pointer;overflow:hidden">
+        <div style="position:absolute;right:-30px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.12)"></div>
+        <div style="position:relative;width:84px;height:84px;border-radius:26px;background:rgba(255,255,255,.16);flex:none;display:flex;align-items:center;justify-content:center"><fsl-char c="{{ me.c }}" v="{{ myV }}" hue="{{ me.hue }}" acc="{{ me.acc }}" style="width:74px;height:74px;display:block"></fsl-char>
+          <sc-if value="{{ meRing.on }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 90 90" width="90" height="90" style="position:absolute;left:-3px;top:-3px;transform:rotate(-90deg)"><circle cx="45" cy="45" r="40" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="4"></circle><circle cx="45" cy="45" r="40" fill="none" stroke="#c8f542" stroke-width="4" stroke-linecap="round" stroke-dasharray="{{ meRing.dash }}"></circle></svg><span style="position:absolute;right:-6px;bottom:-6px;padding:2px 7px;border-radius:99px;background:#c8f542;color:#1c1330;font:900 11px Nunito;display:flex;align-items:center;gap:2px"><span style="font-family:'Material Symbols Rounded';font-size:12px">timer</span>{{ meRing.left }}</span></sc-if></div>
+        <div style="position:relative;flex:1;min-width:0"><div style="font:800 12px Nunito;letter-spacing:.08em;opacity:.75">YOU · {{ meLabel }}</div><div style="font:800 18px/1.2 Unbounded;margin-top:4px;letter-spacing:-.01em">“{{ me.s }}”</div><div style="font:700 12.5px Nunito;opacity:.75;margin-top:6px">{{ meMeta }}</div></div>
+        <div style="position:relative;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;flex:none">edit</div>
+      </div>
+
+      <sc-if value="{{ isOne }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:24px 6px 10px"><span style="font:800 16px Unbounded">Just you two</span><span style="font:800 13px Nunito;color:var(--sub)">{{ curGroup.count }} private spaces</span></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ ones }}" as="o" hint-placeholder-count="2">
+            <div onClick="{{ o.open }}" style="position:relative;overflow:hidden;padding:14px;border-radius:30px;background:var(--card);border:1px solid var(--line);box-shadow:{{ t.cardSh }};cursor:pointer">
+              <div style="position:absolute;inset:0;background:radial-gradient(60% 80% at 80% 50%,{{ o.a.1 }}40,transparent 70%),radial-gradient(60% 80% at 20% 50%,rgba(200,245,66,.18),transparent 70%)"></div>
+              <div style="position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px">
+                <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px"><fsl-char c="{{ o.myC }}" v="{{ myV }}" style="width:84px;height:84px;display:block"></fsl-char><div style="font:700 13px Unbounded">You</div><div style="font:800 12.5px Nunito;color:var(--sub);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.myS }}</div></div>
+                <div style="width:34px;height:34px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:18px;color:#ff5ca8;font-variation-settings:'FILL' 1">favorite</div>
+                <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px"><fsl-char c="{{ o.c }}" v="{{ o.v }}" style="width:84px;height:84px;display:block"></fsl-char><div style="font:700 13px Unbounded">{{ o.n }}</div><div style="font:800 12.5px Nunito;color:var(--sub);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.s }}</div></div>
+              </div>
+              <div style="position:relative;display:flex;justify-content:center;gap:6px;margin-top:10px"><span style="padding:4px 10px;border-radius:99px;background:var(--tonal);font:800 11.5px Nunito;color:var(--sub)">{{ o.d }} apart</span><span style="padding:4px 10px;border-radius:99px;background:var(--tonal);font:800 11.5px Nunito;color:var(--sub)">{{ o.ago }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ notOne }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding:24px 6px 10px"><span style="font:800 16px Unbounded">Right now</span><span style="font:800 13px Nunito;color:var(--sub)">Sorted by latest</span></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ friends }}" as="f" hint-placeholder-count="6">
+          <div onClick="{{ f.open }}" style="display:flex;gap:14px;align-items:center;padding:10px 14px 10px 10px;border-radius:28px;background:var(--card);border:1px solid var(--line);box-shadow:{{ t.cardSh }};cursor:pointer">
+            <div style="position:relative;width:76px;height:76px;border-radius:24px;background:{{ f.glow }};flex:none">
+              <fsl-char c="{{ f.c }}" v="{{ f.v }}" style="position:absolute;inset:4px;display:block"></fsl-char>
+              <div style="position:absolute;left:-4px;bottom:-4px;width:26px;height:26px;border-radius:50%;background:{{ f.av }};border:3px solid {{ t.ring }};font:800 10px/26px Unbounded;text-align:center;color:#1c1330">{{ f.i }}</div>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font:700 16px Unbounded;letter-spacing:-.01em">{{ f.n }}</span><span style="font:800 12px Nunito;color:{{ f.timeColor }};white-space:nowrap">{{ f.ago }}</span></div>
+              <div style="font:800 15px/1.25 Nunito;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.s }}</div>
+              <div style="display:flex;gap:6px;margin-top:7px"><span style="display:flex;align-items:center;gap:4px;padding:3px 9px 3px 6px;border-radius:99px;background:var(--tonal);font:800 11.5px Nunito;color:var(--sub)"><span style="font-family:'Material Symbols Rounded';font-size:15px;font-variation-settings:'FILL' 1">{{ f.icon }}</span>{{ f.l }}</span><span style="padding:3px 9px;border-radius:99px;background:var(--tonal);font:800 11.5px Nunito;color:var(--sub)">{{ f.d }}</span></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      </sc-if>
+    </div>
+    <div onClick="{{ openSheet }}" style="position:absolute;right:16px;bottom:104px;height:64px;display:flex;align-items:center;gap:8px;padding:0 22px 0 10px;border-radius:22px;background:var(--acc);color:var(--onacc);font:900 16px Nunito;box-shadow:0 14px 30px rgba(160,210,40,.35),inset 0 -3px 0 rgba(0,0,0,.1),inset 0 2px 0 rgba(255,255,255,.5);cursor:pointer;transition:border-radius .35s cubic-bezier(.3,1.6,.5,1),transform .35s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:32px;transform:scale(.94)"><fsl-char c="{{ me.c }}" v="{{ myV }}" style="width:46px;height:46px;display:block"></fsl-char>Set status</div>
+  </sc-if>
+
+  <sc-if value="{{ isOnb1 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:56px 24px 28px;box-sizing:border-box">
+      <div style="position:relative;height:400px;margin:0 -24px">
+        <div style="position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:44% 56% 52% 48%/48% 42% 58% 52%;background:radial-gradient(circle at 40% 35%,rgba(160,120,255,.55),rgba(255,92,168,.18) 60%,transparent 72%);filter:blur(4px)"></div>
+        <fsl-char c="toilet" idle="" style="position:absolute;left:128px;top:112px;width:150px;height:150px;display:block"></fsl-char>
+        <fsl-char c="partying" idle="" style="position:absolute;left:34px;top:48px;width:92px;height:92px;display:block"></fsl-char>
+        <fsl-char c="sleeping" idle="" style="position:absolute;right:28px;top:40px;width:96px;height:96px;display:block"></fsl-char>
+        <fsl-char c="gym" idle="" style="position:absolute;left:18px;top:236px;width:96px;height:96px;display:block"></fsl-char>
+        <fsl-char c="coffee" idle="" style="position:absolute;right:34px;top:250px;width:84px;height:84px;display:block"></fsl-char>
+        <fsl-char c="driving" idle="" style="position:absolute;left:150px;top:300px;width:80px;height:80px;display:block"></fsl-char>
+        <fsl-char c="free" idle="" style="position:absolute;left:164px;top:10px;width:70px;height:70px;display:block"></fsl-char>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px"><span style="width:22px;height:8px;border-radius:4px;background:var(--acc)"></span><span style="width:8px;height:8px;border-radius:4px;background:var(--tonal)"></span><span style="width:8px;height:8px;border-radius:4px;background:var(--tonal)"></span><span style="width:8px;height:8px;border-radius:4px;background:var(--tonal)"></span></div>
+      <div style="margin-top:18px;font:800 38px/1.02 Unbounded;letter-spacing:-.03em">Your friends.<br>Live. <span style="color:var(--acc)">Unfiltered.</span></div>
+      <div style="margin-top:14px;font:700 16px/1.45 Nunito;color:var(--sub);text-wrap:pretty">Share what you’re up to in one tap. It lands on their home screen instantly.</div>
+      <div style="flex:1"></div>
+      <div onClick="{{ toGenderCreate }}" style="height:60px;border-radius:30px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;font:900 17px Nunito;box-shadow:0 14px 30px rgba(160,210,40,.3),inset 0 2px 0 rgba(255,255,255,.5);cursor:pointer;transition:border-radius .3s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:18px">Create a group</div>
+      <div onClick="{{ toGenderJoin }}" style="margin-top:10px;height:56px;border-radius:28px;background:var(--tonal);display:flex;align-items:center;justify-content:center;font:900 16px Nunito;cursor:pointer">I have a code</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isGender }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:56px 20px 28px;box-sizing:border-box">
+      <div style="display:flex;justify-content:space-between;align-items:center"><div onClick="{{ go.onb1 }}" style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;cursor:pointer">arrow_back</div><div style="display:flex;gap:6px"><span style="width:8px;height:8px;border-radius:4px;background:var(--tonal)"></span><span style="width:22px;height:8px;border-radius:4px;background:var(--acc)"></span><span style="width:8px;height:8px;border-radius:4px;background:var(--tonal)"></span><span style="width:8px;height:8px;border-radius:4px;background:var(--tonal)"></span></div></div>
+      <div style="margin-top:22px;padding:0 4px;font:800 31px/1.05 Unbounded;letter-spacing:-.025em">Are you a boy or a girl?</div>
+      <div style="margin-top:10px;padding:0 4px;font:700 15px/1.45 Nunito;color:var(--sub)">This picks your character set. Friends see your statuses in your version.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px">
+        <sc-for list="{{ genders }}" as="g" hint-placeholder-count="2">
+          <div onClick="{{ g.pick }}" style="position:relative;height:300px;border-radius:32px;background:{{ g.bg }};box-shadow:{{ g.ring }};transform:{{ g.tf }};transition:transform .45s cubic-bezier(.3,1.7,.5,1),box-shadow .2s;display:flex;flex-direction:column;align-items:center;padding:14px 10px 16px;box-sizing:border-box;cursor:pointer;overflow:hidden" style-active="transform:scale(.95)">
+            <div style="position:absolute;inset:0;background:{{ g.aura }}"></div>
+            <fsl-char c="{{ g.hero }}" v="{{ g.v }}" face="{{ g.bump }}" idle="" style="position:relative;width:150px;height:150px;display:block;margin-top:6px"></fsl-char>
+            <div style="position:relative;font:800 24px Unbounded;margin-top:6px;color:#fff">{{ g.label }}</div>
+            <div style="position:relative;font:800 12.5px Nunito;color:rgba(255,255,255,.75);margin-top:4px;text-align:center">{{ g.sub }}</div>
+            <div style="position:relative;display:flex;gap:2px;margin-top:auto"><fsl-char c="toilet" v="{{ g.v }}" style="width:40px;height:40px;display:block"></fsl-char><fsl-char c="gym" v="{{ g.v }}" style="width:40px;height:40px;display:block"></fsl-char><fsl-char c="sleeping" v="{{ g.v }}" style="width:40px;height:40px;display:block"></fsl-char></div>
+            <sc-if value="{{ g.on }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:#c8f542;color:#1c1330;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:20px;font-variation-settings:'FILL' 1">check</span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <div onClick="{{ pickNeutral }}" style="margin-top:12px;display:flex;align-items:center;gap:12px;padding:8px 16px 8px 8px;border-radius:26px;background:{{ neutralOpt.bg }};box-shadow:{{ neutralOpt.ring }};cursor:pointer;transition:transform .35s cubic-bezier(.3,1.6,.5,1)" style-active="transform:scale(.97)">
+        <fsl-char c="free" v="neutral" face="{{ neutralOpt.bump }}" style="width:52px;height:52px;display:block"></fsl-char>
+        <div style="flex:1"><div style="font:900 15px Nunito">Prefer not to say</div><div style="font:700 12.5px Nunito;color:var(--sub)">Neutral set · bucket hats, all statuses</div></div>
+        <span style="font-family:'Material Symbols Rounded';font-size:24px;color:{{ neutralOpt.check }};font-variation-settings:'FILL' 1">check_circle</span>
+      </div>
+      <div style="margin-top:10px;text-align:center;font:700 12.5px Nunito;color:var(--sub)">Change it anytime in Profile › Settings</div>
+      <div style="flex:1"></div>
+      <div onClick="{{ genderNext }}" style="height:60px;border-radius:30px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;font:900 17px Nunito;box-shadow:0 14px 30px rgba(160,210,40,.3),inset 0 2px 0 rgba(255,255,255,.5);cursor:pointer">Continue</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isOnb2 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:56px 24px 28px;box-sizing:border-box">
+      <div onClick="{{ go.onb1 }}" style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;cursor:pointer">arrow_back</div>
+      <div style="margin-top:28px;font:800 32px/1.05 Unbounded;letter-spacing:-.025em">Join the squad</div>
+      <div style="margin-top:10px;font:700 16px/1.45 Nunito;color:var(--sub)">Type the 6-digit code your friend sent you.</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:28px">
+        <sc-for list="{{ codeDigits }}" as="d" hint-placeholder-count="6">
+          <div style="height:64px;border-radius:20px;background:var(--card);border:2px solid {{ d.border }};display:flex;align-items:center;justify-content:center;font:800 28px Unbounded;box-shadow:{{ t.cardSh }}">{{ d.v }}</div>
+        </sc-for>
+      </div>
+      <div style="margin-top:22px;padding:16px;border-radius:28px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;gap:14px;box-shadow:{{ t.cardSh }}">
+        <div style="display:flex;padding-left:10px"><fsl-char c="toilet" style="width:44px;height:44px;margin-left:-10px;display:block"></fsl-char><fsl-char c="partying" style="width:44px;height:44px;margin-left:-14px;display:block"></fsl-char><fsl-char c="gym" style="width:44px;height:44px;margin-left:-14px;display:block"></fsl-char></div>
+        <div style="flex:1"><div style="font:800 16px Unbounded">The Flat</div><div style="font:700 13px Nunito;color:var(--sub);margin-top:2px">Maya, Léo, Jonas + 3 more</div></div>
+        <span style="font-family:'Material Symbols Rounded';font-size:26px;color:var(--acc);font-variation-settings:'FILL' 1">check_circle</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin:26px 0 0;font:800 12px Nunito;color:var(--sub)"><span style="flex:1;height:1px;background:var(--line)"></span>OR<span style="flex:1;height:1px;background:var(--line)"></span></div>
+      <div style="margin-top:16px;height:56px;border-radius:28px;border:1.5px dashed var(--sub);display:flex;align-items:center;justify-content:center;gap:8px;font:800 15px Nunito;color:var(--sub)"><span style="font-family:'Material Symbols Rounded';font-size:20px">link</span>Paste an invite link</div>
+      <div style="flex:1"></div>
+      <div onClick="{{ go.joined }}" style="height:60px;border-radius:30px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;font:900 17px Nunito;box-shadow:0 14px 30px rgba(160,210,40,.3),inset 0 2px 0 rgba(255,255,255,.5);cursor:pointer">Join The Flat</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isOnb3 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:56px 24px 28px;box-sizing:border-box">
+      <div onClick="{{ go.onb2 }}" style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;cursor:pointer">arrow_back</div>
+      <div style="margin-top:24px;font:800 32px/1.05 Unbounded;letter-spacing:-.025em">Who are you?</div>
+      <div style="margin-top:8px;font:700 16px Nunito;color:var(--sub)">This is how you show up on widgets.</div>
+      <div style="display:flex;justify-content:center;margin-top:26px">
+        <div style="position:relative;width:128px;height:128px;border-radius:50%;background:{{ avatarBg }};display:flex;align-items:center;justify-content:center;font:800 54px Unbounded;color:#1c1330;box-shadow:inset 0 -8px 16px rgba(0,0,0,.18),inset 0 4px 8px rgba(255,255,255,.5),0 20px 40px rgba(0,0,0,.3)">{{ nickInitial }}<fsl-char c="free" idle="" style="position:absolute;right:-26px;top:-18px;width:72px;height:72px;display:block"></fsl-char></div>
+      </div>
+      <div style="display:flex;justify-content:center;gap:10px;margin-top:22px">
+        <sc-for list="{{ avatars }}" as="a" hint-placeholder-count="6">
+          <div onClick="{{ a.pick }}" style="width:40px;height:40px;border-radius:50%;background:{{ a.bg }};box-shadow:{{ a.ring }};cursor:pointer;transition:transform .3s cubic-bezier(.3,1.6,.5,1)" style-active="transform:scale(.85)"></div>
+        </sc-for>
+      </div>
+      <div style="margin-top:26px;font:800 12px Nunito;letter-spacing:.08em;color:var(--sub);padding-left:6px">NICKNAME</div>
+      <input value="{{ st.nick }}" onChange="{{ setNick }}" maxLength="14" style="margin-top:8px;height:60px;border-radius:22px;border:2px solid var(--acc);background:var(--card);color:var(--fg);padding:0 20px;font:800 20px Nunito;outline:none;box-sizing:border-box;width:100%">
+      <div style="margin-top:8px;font:700 13px Nunito;color:var(--sub);padding-left:6px">Friends can give you a nickname later. Brace yourself.</div>
+      <div style="flex:1"></div>
+      <div onClick="{{ go.onb4 }}" style="height:60px;border-radius:30px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;font:900 17px Nunito;box-shadow:0 14px 30px rgba(160,210,40,.3),inset 0 2px 0 rgba(255,255,255,.5);cursor:pointer">Looks good</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isOnb4 }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:56px 24px 28px;box-sizing:border-box">
+      <div style="position:relative;height:280px;border-radius:36px;overflow:hidden;background:#15101f;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)">
+        <div style="position:absolute;inset:-40px;transform:rotate(-14deg);background:linear-gradient(90deg,transparent 46px,#241c33 46px,#241c33 54px,transparent 54px) 0 0/96px 96px,linear-gradient(0deg,transparent 46px,#241c33 46px,#241c33 54px,transparent 54px) 0 0/96px 96px"></div>
+        <div style="position:absolute;left:30px;top:150px;width:120px;height:80px;border-radius:30px;background:#1d3a2a;transform:rotate(-14deg)"></div>
+        <div style="position:absolute;left:50%;top:50%;width:170px;height:170px;margin:-85px 0 0 -85px;border-radius:50%;background:radial-gradient(circle,rgba(200,245,66,.28),rgba(200,245,66,.06) 60%,transparent 70%);border:1.5px dashed rgba(200,245,66,.5)"></div>
+        <fsl-char c="walking" idle="" style="position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-58px 0 0 -48px;display:block"></fsl-char>
+        <div style="position:absolute;right:40px;top:40px;width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#c9b6ff,#8a6cff);border:3px solid #15101f;font:800 13px/36px Unbounded;text-align:center;color:#1c1330">L</div>
+        <div style="position:absolute;left:40px;top:56px;width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#ffc0d2,#ff7aa0);border:3px solid #15101f;font:800 13px/36px Unbounded;text-align:center;color:#1c1330">M</div>
+        <div style="position:absolute;left:50%;bottom:22px;transform:translateX(-50%);padding:7px 14px;border-radius:99px;background:rgba(255,255,255,.12);backdrop-filter:blur(10px);font:800 13px Nunito;color:#fff;white-space:nowrap">“Uni” · about 2 km away</div>
+      </div>
+      <div style="margin-top:24px;font:800 32px/1.05 Unbounded;letter-spacing:-.025em">Where you at?</div>
+      <div style="margin-top:10px;font:700 15.5px/1.45 Nunito;color:var(--sub);text-wrap:pretty">Friends see a label like “Uni” or “2.3 km away”. Your exact spot only if you say so.</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+        <div style="display:flex;align-items:center;gap:12px;font:800 15px Nunito"><span style="width:40px;height:40px;border-radius:14px;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;color:var(--vio)">blur_on</span>Approximate by default</div>
+        <div style="display:flex;align-items:center;gap:12px;font:800 15px Nunito"><span style="width:40px;height:40px;border-radius:14px;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;color:var(--vio)">visibility_off</span>Ghost mode whenever you want</div>
+        <div style="display:flex;align-items:center;gap:12px;font:800 15px Nunito"><span style="width:40px;height:40px;border-radius:14px;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;color:var(--vio)">lock</span>Never sold. No ads. Ever.</div>
+      </div>
+      <div style="flex:1"></div>
+      <div onClick="{{ go.home }}" style="height:60px;border-radius:30px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;font:900 17px Nunito;box-shadow:0 14px 30px rgba(160,210,40,.3),inset 0 2px 0 rgba(255,255,255,.5);cursor:pointer">Allow while using the app</div>
+      <div onClick="{{ go.home }}" style="margin-top:6px;height:48px;display:flex;align-items:center;justify-content:center;font:800 15px Nunito;color:var(--sub);cursor:pointer">Maybe later</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isMap }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;overflow:hidden;background:{{ t.mapBg }}">
+      <div style="position:absolute;inset:-200px;transform:rotate(-16deg);background:linear-gradient(90deg,transparent 58px,{{ t.street }} 58px,{{ t.street }} 64px,transparent 64px) 0 0/122px 122px,linear-gradient(0deg,transparent 58px,{{ t.street }} 58px,{{ t.street }} 64px,transparent 64px) 0 0/122px 122px"></div>
+      <div style="position:absolute;inset:-200px;transform:rotate(-16deg);background:linear-gradient(90deg,transparent 480px,{{ t.road }} 480px,{{ t.road }} 494px,transparent 494px),linear-gradient(0deg,transparent 700px,{{ t.road }} 700px,{{ t.road }} 714px,transparent 714px)"></div>
+      <div style="position:absolute;left:-40px;top:130px;width:190px;height:150px;border-radius:60px 90px 70px 50px;background:{{ t.park }};transform:rotate(-16deg)"></div>
+      <div style="position:absolute;right:-30px;top:560px;width:170px;height:120px;border-radius:70px 50px 80px 60px;background:{{ t.park }};transform:rotate(-16deg)"></div>
+      <svg viewBox="0 0 412 892" width="412" height="892" style="position:absolute;inset:0"><path d="M-20 470 C 90 430, 160 520, 250 470 S 380 400, 440 430" stroke="{{ t.river }}" stroke-width="34" fill="none" stroke-linecap="round"></path></svg>
+      <div style="position:absolute;left:36px;top:300px;font:800 11px Nunito;letter-spacing:.2em;color:{{ t.mapLabel }}">OLD TOWN</div>
+      <div style="position:absolute;right:40px;top:410px;font:800 11px Nunito;letter-spacing:.2em;color:{{ t.mapLabel }}">RIVERSIDE</div>
+      <div style="position:absolute;left:60px;top:640px;font:800 11px Nunito;letter-spacing:.2em;color:{{ t.mapLabel }}">CAMPUS</div>
+      <div style="position:absolute;inset:0;background:radial-gradient(80% 50% at 50% 45%,transparent 50%,{{ t.mapVignette }})"></div>
+      <div style="position:absolute;left:190px;top:420px;width:32px;height:32px"><fsl-live size="32" style="color:rgba(200,245,66,.35);position:absolute;inset:0"></fsl-live><div style="position:absolute;inset:6px;border-radius:50%;background:#c8f542;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.4)"></div></div>
+      <sc-for list="{{ pins }}" as="p" hint-placeholder-count="6">
+        <div onClick="{{ p.select }}" style="position:absolute;left:{{ p.x }}px;top:{{ p.y }}px;transform:translate(-50%,-100%) scale({{ p.scale }});transform-origin:50% 100%;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .45s cubic-bezier(.3,1.7,.5,1);z-index:{{ p.z }}">
+          <div style="position:relative;width:68px;height:68px;border-radius:24px;background:{{ t.pinBg }};border:3px solid {{ p.col }};box-shadow:0 12px 24px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><fsl-char c="{{ p.c }}" v="{{ p.v }}" style="width:58px;height:58px;display:block"></fsl-char><div style="position:absolute;bottom:-9px;left:50%;margin-left:-8px;width:16px;height:16px;background:{{ t.pinBg }};border-right:3px solid {{ p.col }};border-bottom:3px solid {{ p.col }};transform:rotate(45deg);border-radius:0 0 4px 0"></div></div>
+          <div style="margin-top:12px;padding:3px 10px;border-radius:99px;background:{{ p.col }};font:900 12px Nunito;color:#1c1330;white-space:nowrap">{{ p.n }}</div>
+        </div>
+      </sc-for>
+      <div style="position:absolute;left:16px;right:16px;top:52px;display:flex;gap:8px;align-items:center">
+        <div style="flex:1;height:52px;border-radius:26px;background:{{ t.glass }};backdrop-filter:blur(20px);display:flex;align-items:center;gap:10px;padding:0 16px;box-shadow:0 10px 30px rgba(0,0,0,.25)"><fsl-live size="8" style="color:{{ t.live }}"></fsl-live><span style="font:800 15px Nunito;flex:1">The Flat · 6 on the map</span><span style="font-family:'Material Symbols Rounded';font-size:22px;opacity:.7">expand_more</span></div>
+        <div onClick="{{ go.privacy }}" style="width:52px;height:52px;border-radius:18px;background:{{ t.glass }};backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;cursor:pointer">visibility_off</div>
+      </div>
+      <div style="position:absolute;right:16px;bottom:262px;width:52px;height:52px;border-radius:18px;background:{{ t.glass }};backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;color:var(--acc);font-variation-settings:'FILL' 1">near_me</div>
+      <div style="position:absolute;left:0;right:0;bottom:100px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:0 16px 4px;scroll-snap-type:x mandatory">
+        <sc-for list="{{ pins }}" as="p" hint-placeholder-count="4">
+          <div onClick="{{ p.open }}" style="flex:none;width:228px;scroll-snap-align:start;display:flex;gap:12px;align-items:center;padding:10px 14px 10px 10px;border-radius:26px;background:{{ t.glass }};backdrop-filter:blur(20px);box-shadow:{{ p.cardRing }};cursor:pointer">
+            <fsl-char c="{{ p.c }}" v="{{ p.v }}" style="width:54px;height:54px;display:block;flex:none"></fsl-char>
+            <div style="min-width:0"><div style="font:700 14px Unbounded">{{ p.n }}</div><div style="font:800 13px Nunito;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">{{ p.s }}</div><div style="font:800 11.5px Nunito;color:var(--sub);margin-top:3px">{{ p.l }} · {{ p.d }} · {{ p.ago }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isFriend }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding:52px 16px 40px;box-sizing:border-box">
+      <div style="position:absolute;left:-60px;right:-60px;top:-40px;height:520px;background:{{ fr.aura }};pointer-events:none"></div>
+      <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:6px 4px 0">
+        <div onClick="{{ go.home }}" style="width:44px;height:44px;border-radius:50%;background:var(--tonal);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;cursor:pointer">arrow_back</div>
+        <div style="display:flex;align-items:center;gap:6px;font:800 12px Nunito;letter-spacing:.08em;color:var(--sub)"><fsl-live size="7" style="color:{{ t.live }}"></fsl-live>LIVE · {{ fr.ago }}</div>
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px">more_vert</div>
+      </div>
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:6px">
+        <fsl-char c="{{ fr.c }}" v="{{ fr.v }}" idle="" ref="{{ bigRef }}" style="width:210px;height:210px;display:block"></fsl-char>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px"><div style="width:34px;height:34px;border-radius:50%;background:{{ fr.av }};font:800 14px/34px Unbounded;color:#1c1330">{{ fr.i }}</div><span style="font:800 32px Unbounded;letter-spacing:-.025em">{{ fr.n }}</span></div>
+        <div style="margin-top:10px;font:800 21px/1.25 Nunito;max-width:300px;text-wrap:balance">“{{ fr.s }}”</div>
+        <div style="display:flex;gap:6px;margin-top:12px"><span style="display:flex;align-items:center;gap:4px;padding:6px 12px 6px 9px;border-radius:99px;background:var(--tonal);font:800 13px Nunito"><span style="font-family:'Material Symbols Rounded';font-size:17px;font-variation-settings:'FILL' 1;color:var(--vio)">{{ fr.icon }}</span>{{ fr.l }}</span><span style="padding:6px 12px;border-radius:99px;background:var(--tonal);font:800 13px Nunito">{{ fr.d }}</span></div>
+      </div>
+      <div style="position:relative;display:grid;grid-template-columns:1fr 1fr 1.5fr;gap:8px;margin-top:24px">
+        <div onClick="{{ react.poke }}" style="height:76px;border-radius:26px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:border-radius .35s cubic-bezier(.3,1.6,.5,1),transform .35s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:40px;transform:scale(.92)"><span style="font-family:'Material Symbols Rounded';font-size:28px;color:var(--vio);font-variation-settings:'FILL' 1">touch_app</span><span style="font:900 13px Nunito">Poke</span></div>
+        <div onClick="{{ react.laugh }}" style="height:76px;border-radius:26px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:border-radius .35s cubic-bezier(.3,1.6,.5,1),transform .35s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:40px;transform:scale(.92)"><span style="font-family:'Material Symbols Rounded';font-size:28px;color:#ffb13d;font-variation-settings:'FILL' 1">sentiment_very_satisfied</span><span style="font:900 13px Nunito">Laugh</span></div>
+        <div onClick="{{ react.out }}" style="height:76px;border-radius:26px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 14px 30px rgba(160,210,40,.3),inset 0 2px 0 rgba(255,255,255,.5);transition:border-radius .35s cubic-bezier(.3,1.6,.5,1),transform .35s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:40px;transform:scale(.94)"><span style="font-family:'Material Symbols Rounded';font-size:26px">waving_hand</span><span style="font:900 16px Nunito">Come out?</span></div>
+      </div>
+      <div style="position:relative;display:flex;justify-content:space-between;align-items:baseline;padding:28px 6px 12px"><span style="font:800 16px Unbounded">Today</span><span style="font:800 13px Nunito;color:var(--sub)">{{ fr.hCount }} updates</span></div>
+      <div style="position:relative;padding-left:4px">
+        <div style="position:absolute;left:31px;top:20px;bottom:20px;width:2px;border-radius:1px;background:var(--line)"></div>
+        <sc-for list="{{ fr.hist }}" as="h" hint-placeholder-count="4">
+          <div style="position:relative;display:flex;align-items:center;gap:14px;padding:6px 0">
+            <div style="width:56px;height:56px;border-radius:20px;background:{{ h.bg }};display:flex;align-items:center;justify-content:center;flex:none;box-shadow:{{ h.ring }}"><fsl-char c="{{ h.c }}" v="{{ fr.v }}" style="width:46px;height:46px;display:block"></fsl-char></div>
+            <div style="flex:1;min-width:0"><div style="font:800 15px Nunito">{{ h.s }}</div><div style="font:700 12.5px Nunito;color:var(--sub);margin-top:2px">{{ h.label }}</div></div>
+            <span style="font:800 13px Unbounded;color:var(--sub)">{{ h.time }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPrivacy }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding:56px 16px 110px;box-sizing:border-box">
+      <div style="display:flex;align-items:center;gap:14px;padding:8px 4px 0">
+        <div style="position:relative;width:64px;height:64px;border-radius:50%;background:{{ avatarBg }};font:800 26px/64px Unbounded;text-align:center;color:#1c1330;flex:none">{{ nickInitial }}<fsl-char c="{{ me.c }}" v="{{ myV }}" style="position:absolute;right:-12px;bottom:-8px;width:38px;height:38px;display:block"></fsl-char></div>
+        <div style="flex:1"><div style="font:800 22px Unbounded;letter-spacing:-.02em">{{ st.nick }}</div><div style="font:700 13px Nunito;color:var(--sub);margin-top:2px">3 groups · 14 friends</div></div>
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px">settings</div>
+      </div>
+      <div style="margin:22px 4px 10px;font:800 26px/1.05 Unbounded;letter-spacing:-.025em">Privacy</div>
+
+      <div onClick="{{ toggleGhost }}" style="position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;padding:18px 16px;border-radius:30px;background:{{ gh.bg }};color:{{ gh.fg }};cursor:pointer;transition:background .35s;box-shadow:{{ gh.sh }}">
+        <div style="width:60px;height:60px;border-radius:{{ gh.shape }};background:{{ gh.iconBg }};display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:32px;font-variation-settings:'FILL' 1;transition:border-radius .5s cubic-bezier(.3,1.6,.5,1);flex:none">{{ gh.icon }}</div>
+        <div style="flex:1"><div style="font:800 17px Unbounded">Ghost mode</div><div style="font:700 13px/1.35 Nunito;opacity:.75;margin-top:4px">{{ gh.sub }}</div></div>
+        <div style="width:52px;height:32px;border-radius:16px;background:{{ gh.track }};position:relative;flex:none"><div style="position:absolute;top:4px;left:{{ gh.left }}px;width:24px;height:24px;border-radius:50%;background:{{ gh.thumb }};transition:left .35s cubic-bezier(.3,1.6,.5,1)"></div></div>
+      </div>
+
+      <div style="margin-top:14px;padding:16px;border-radius:30px;background:var(--card);border:1px solid var(--line);box-shadow:{{ t.cardSh }}">
+        <div style="font:800 15px Nunito">Location precision</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:12px;padding:4px;border-radius:22px;background:var(--tonal)">
+          <sc-for list="{{ precisions }}" as="p" hint-placeholder-count="3"><div onClick="{{ p.pick }}" style="height:44px;border-radius:{{ p.r }};background:{{ p.bg }};color:{{ p.fg }};display:flex;align-items:center;justify-content:center;gap:4px;font:900 13.5px Nunito;cursor:pointer;transition:all .4s cubic-bezier(.3,1.6,.5,1)"><span style="font-family:'Material Symbols Rounded';font-size:18px">{{ p.icon }}</span>{{ p.label }}</div></sc-for>
+        </div>
+        <div style="margin-top:12px;font:700 13px/1.45 Nunito;color:var(--sub);text-wrap:pretty">{{ precisionSub }}</div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding:22px 6px 10px"><span style="font:800 16px Unbounded">Per group</span><span style="font:800 12px Nunito;color:var(--sub)">Tap to change</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+          <div onClick="{{ g.cycle }}" style="display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border-radius:24px;background:var(--card);border:1px solid var(--line);cursor:pointer">
+            <div style="display:flex;padding-left:10px"><fsl-char c="{{ g.c1 }}" style="width:36px;height:36px;margin-left:-10px;display:block"></fsl-char><fsl-char c="{{ g.c2 }}" style="width:36px;height:36px;margin-left:-12px;display:block"></fsl-char></div>
+            <div style="flex:1"><div style="font:800 15px Nunito">{{ g.name }}</div><div style="font:700 12.5px Nunito;color:var(--sub)">{{ g.members }} friends</div></div>
+            <span style="padding:7px 12px;border-radius:14px;background:{{ g.bg }};color:{{ g.fg }};font:900 12.5px Nunito">{{ g.level }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:18px;padding:0 4px"><span style="font:800 13px Nunito;color:var(--sub)">Pause sharing</span><span style="padding:8px 12px;border-radius:14px;background:var(--tonal);font:800 13px Nunito">1 h</span><span style="padding:8px 12px;border-radius:14px;background:var(--tonal);font:800 13px Nunito">Tonight</span><span style="padding:8px 12px;border-radius:14px;background:var(--tonal);font:800 13px Nunito">Weekend</span></div>
+      <div style="margin-top:22px;padding:0 6px;display:flex;flex-direction:column;gap:14px;font:800 14px Nunito"><span style="color:var(--vio)">Clear my status history</span><span style="color:#ff6b7f">Leave all groups &amp; delete data</span></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding:52px 16px 110px;box-sizing:border-box">
+      <div style="position:absolute;left:-40px;right:-40px;top:-60px;height:360px;background:{{ prof.aura }};pointer-events:none"></div>
+      <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:6px 4px 0"><span style="font:800 13px Nunito;letter-spacing:.08em;color:var(--sub)">PROFILE</span><div onClick="{{ go.privacy }}" style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;cursor:pointer">shield_lock</div></div>
+      <div style="position:relative;display:flex;justify-content:center;margin-top:8px">
+        <div onClick="{{ go.crop }}" style="position:relative;width:120px;height:120px;border-radius:50%;background:{{ avatarBg }};box-shadow:0 20px 40px rgba(0,0,0,.35),0 0 0 4px var(--bg),0 0 0 6px rgba(255,255,255,.14);cursor:pointer;overflow:hidden"><image-slot id="fsl-profile-photo" shape="circle" placeholder="Your photo" style="position:absolute;inset:0;width:100%;height:100%"></image-slot></div>
+        <div onClick="{{ go.editor }}" style="position:absolute;left:50%;margin-left:28px;top:40px;width:104px;height:104px;cursor:pointer"><fsl-char c="me" tint="{{ look.tint }}" face="{{ look.face }}" acc="{{ look.acc }}" outfit="{{ look.outfit }}" idle="" style="width:104px;height:104px;display:block"></fsl-char></div>
+        <span onClick="{{ go.crop }}" style="position:absolute;left:50%;margin-left:-66px;top:88px;width:36px;height:36px;border-radius:50%;background:var(--fg);color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:19px;cursor:pointer">photo_camera</span>
+      </div>
+      <div style="position:relative;text-align:center;margin-top:14px"><div style="font:800 28px Unbounded;letter-spacing:-.02em">{{ st.nick }}</div><div style="font:700 14.5px Nunito;color:var(--sub);margin-top:4px">professional napper · amateur chef</div>
+        <div style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:5px 14px 5px 5px;border-radius:99px;background:var(--tonal)"><fsl-char c="{{ me.c }}" v="{{ myV }}" style="width:30px;height:30px;display:block"></fsl-char><span style="font:800 13.5px Nunito">{{ me.s }}</span></div></div>
+      <div style="position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:18px">
+        <sc-for list="{{ prof.stats }}" as="s" hint-placeholder-count="3"><div style="padding:12px 0;border-radius:22px;background:var(--card);border:1px solid var(--line);text-align:center"><div style="font:800 22px Unbounded">{{ s.n }}</div><div style="font:800 12px Nunito;color:var(--sub);margin-top:2px">{{ s.l }}</div></div></sc-for>
+      </div>
+      <div style="position:relative;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <div onClick="{{ go.editor }}" style="height:54px;border-radius:27px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;gap:8px;font:900 15px Nunito;cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:20px">styler</span>Edit character</div>
+        <div style="height:54px;border-radius:27px;background:var(--tonal);display:flex;align-items:center;justify-content:center;gap:8px;font:900 15px Nunito"><span style="font-family:'Material Symbols Rounded';font-size:20px">edit</span>Edit profile</div>
+      </div>
+      <div style="position:relative;display:flex;justify-content:space-between;align-items:baseline;padding:22px 6px 10px"><span style="font:800 16px Unbounded">Favorite statuses</span><span style="font:800 12px Nunito;color:var(--sub)">Quick access in picker</span></div>
+      <div style="position:relative;display:flex;gap:8px">
+        <sc-for list="{{ favs }}" as="f" hint-placeholder-count="4"><div onClick="{{ f.use }}" style="position:relative;width:64px;height:64px;border-radius:22px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><fsl-char c="{{ f.key }}" v="{{ myV }}" hue="{{ f.hue }}" acc="{{ f.acc }}" style="width:52px;height:52px;display:block"></fsl-char><span style="position:absolute;right:-4px;top:-4px;width:20px;height:20px;border-radius:50%;background:#ffd23a;color:#1c1330;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:13px;font-variation-settings:'FILL' 1">star</span></div></sc-for>
+        <div style="width:64px;height:64px;border-radius:22px;border:1.5px dashed var(--sub);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:26px;color:var(--sub);flex:none">add</div>
+      </div>
+      <div style="position:relative;margin-top:18px;display:flex;gap:14px;align-items:center;padding:14px;border-radius:26px;background:{{ t.hero }};color:#fff">
+        <div style="width:84px;height:84px;border-radius:18px;background:#fff;padding:7px;box-sizing:border-box;flex:none"><fsl-qr data="SAM7Q2K" style="display:block;width:100%;height:100%"></fsl-qr></div>
+        <div style="flex:1;min-width:0"><div style="font:800 11.5px Nunito;letter-spacing:.08em;opacity:.8">MY 1-ON-1 CODE</div><div style="font:800 22px Unbounded;letter-spacing:.04em;margin-top:2px">SAM·7Q2K</div><div style="font:700 12.5px Nunito;opacity:.85;margin-top:2px">For a private space with one friend</div></div>
+        <span style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;flex:none">share</span>
+      </div>
+      <div style="position:relative;display:flex;justify-content:space-between;align-items:baseline;padding:22px 6px 10px"><span style="font:800 16px Unbounded">Settings</span></div>
+      <div style="position:relative;padding:14px;border-radius:26px;background:var(--card);border:1px solid var(--line)">
+        <div style="font:800 14.5px Nunito">Character set</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:10px;padding:4px;border-radius:22px;background:var(--tonal)">
+          <sc-for list="{{ vOpts }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="height:52px;border-radius:{{ o.r }};background:{{ o.bg }};color:{{ o.fg }};display:flex;align-items:center;justify-content:center;gap:4px;font:900 13.5px Nunito;cursor:pointer;transition:all .4s cubic-bezier(.3,1.6,.5,1)"><fsl-char c="free" v="{{ o.v }}" style="width:34px;height:34px;display:block"></fsl-char>{{ o.label }}</div></sc-for>
+        </div>
+        <div onClick="{{ toggleShowAll }}" style="display:flex;align-items:center;gap:12px;margin-top:14px;cursor:pointer"><div style="flex:1"><div style="font:800 14.5px Nunito">Show all statuses</div><div style="font:700 12.5px Nunito;color:var(--sub)">Include girl-only and boy-only statuses</div></div><div style="width:52px;height:32px;border-radius:16px;background:{{ swAll.track }};position:relative;flex:none"><div style="position:absolute;top:4px;left:{{ swAll.left }}px;width:24px;height:24px;border-radius:50%;background:{{ swAll.thumb }};transition:left .35s cubic-bezier(.3,1.6,.5,1)"></div></div></div>
+      </div>
+      <div style="position:relative;margin-top:8px;display:flex;flex-direction:column;gap:2px;border-radius:24px;overflow:hidden">
+        <div onClick="{{ go.privacy }}" style="display:flex;align-items:center;gap:12px;padding:15px 16px;background:var(--card);cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:var(--vio)">shield_lock</span><span style="flex:1;font:800 14.5px Nunito">Privacy & location</span><span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--sub)">chevron_right</span></div>
+        <div onClick="{{ go.wconfig }}" style="display:flex;align-items:center;gap:12px;padding:15px 16px;background:var(--card);cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:var(--vio)">widgets</span><span style="flex:1;font:800 14.5px Nunito">Home screen widgets</span><span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--sub)">chevron_right</span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:52px 16px 24px;box-sizing:border-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px 0">
+        <div onClick="{{ go.profile }}" style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;cursor:pointer">arrow_back</div>
+        <span style="font:800 17px Unbounded">Your character</span>
+        <div onClick="{{ randomize }}" style="width:44px;height:44px;border-radius:14px;background:var(--vio);color:#1c1330;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;cursor:pointer;transition:transform .4s cubic-bezier(.3,1.7,.5,1)" style-active="transform:rotate(90deg) scale(.9)">casino</div>
+      </div>
+      <div style="position:relative;height:300px;margin-top:14px;border-radius:36px;overflow:hidden;background:radial-gradient(60% 70% at 50% 20%,{{ look.glow }},transparent 70%),linear-gradient(180deg,#221a36,#120d1e);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)">
+        <div style="position:absolute;left:50%;top:0;width:220px;height:300px;margin-left:-110px;background:linear-gradient(180deg,rgba(255,255,255,.14),transparent 80%);clip-path:polygon(35% 0,65% 0,100% 100%,0 100%)"></div>
+        <div style="position:absolute;left:50%;bottom:26px;width:210px;height:44px;margin-left:-105px;border-radius:50%;background:linear-gradient(180deg,#3a2d5c,#1c1530);box-shadow:0 2px 0 rgba(255,255,255,.12) inset,0 10px 20px rgba(0,0,0,.4)"></div>
+        <fsl-char c="me" tint="{{ look.tint }}" face="{{ look.face }}" acc="{{ look.acc }}" outfit="{{ look.outfit }}" idle="" style="position:absolute;left:50%;bottom:40px;width:210px;height:210px;margin-left:-105px;display:block"></fsl-char>
+        <div style="position:absolute;left:14px;top:14px;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;background:rgba(0,0,0,.35);font:900 12px Nunito;color:#ffd23a">DRIP LVL {{ look.lvl }}<span style="display:flex;gap:2px"><sc-for list="{{ look.stars }}" as="s" hint-placeholder-count="4"><span style="width:8px;height:8px;border-radius:2px;background:{{ s.c }}"></span></sc-for></span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:14px;padding:4px;border-radius:22px;background:var(--tonal)">
+        <sc-for list="{{ edTabs }}" as="tb" hint-placeholder-count="4"><div onClick="{{ tb.pick }}" style="height:44px;border-radius:{{ tb.r }};background:{{ tb.bg }};color:{{ tb.fg }};display:flex;align-items:center;justify-content:center;gap:4px;font:900 13px Nunito;cursor:pointer;transition:all .4s cubic-bezier(.3,1.6,.5,1)"><span style="font-family:'Material Symbols Rounded';font-size:18px">{{ tb.icon }}</span>{{ tb.label }}</div></sc-for>
+      </div>
+      <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;margin-top:12px">
+        <sc-if value="{{ edIsColor }}" hint-placeholder-val="{{ false }}"><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:6px 4px">
+          <sc-for list="{{ edSwatches }}" as="w" hint-placeholder-count="9"><div onClick="{{ w.pick }}" style="aspect-ratio:1;border-radius:50%;background:{{ w.bg }};box-shadow:{{ w.ring }};cursor:pointer;transition:transform .35s cubic-bezier(.3,1.7,.5,1)" style-active="transform:scale(.85)"></div></sc-for>
+        </div></sc-if>
+        <sc-if value="{{ edNotColor }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+          <sc-for list="{{ edItems }}" as="o" hint-placeholder-count="8"><div onClick="{{ o.pick }}" style="position:relative;padding:6px 4px 8px;border-radius:22px;background:{{ o.bg }};box-shadow:{{ o.ring }};display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transform:{{ o.tf }};transition:transform .4s cubic-bezier(.3,1.7,.5,1)" style-active="transform:scale(.9)"><fsl-char c="me" tint="{{ look.tint }}" face="{{ o.face }}" acc="{{ o.acc }}" outfit="{{ o.outfit }}" style="width:58px;height:58px;display:block"></fsl-char><span style="font:800 11px Nunito;white-space:nowrap">{{ o.label }}</span></div></sc-for>
+        </div>
+        <div onClick="{{ toggleAllItems }}" style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:0 6px;cursor:pointer"><span style="flex:1;font:800 13.5px Nunito;color:var(--sub)">Show all items <span style="opacity:.7">· {{ edSetLabel }}</span></span><div style="width:44px;height:26px;border-radius:13px;background:{{ swItems.track }};position:relative"><div style="position:absolute;top:3px;left:{{ swItems.left }}px;width:20px;height:20px;border-radius:50%;background:{{ swItems.thumb }};transition:left .35s cubic-bezier(.3,1.6,.5,1)"></div></div></div>
+        </sc-if>
+      </div>
+      <div onClick="{{ saveLook }}" style="margin-top:12px;height:58px;border-radius:29px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;gap:8px;font:900 17px Nunito;box-shadow:0 14px 30px rgba(160,210,40,.3),inset 0 2px 0 rgba(255,255,255,.5);cursor:pointer;transition:border-radius .35s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:18px">Save look</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isCrop }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:#050308;display:flex;flex-direction:column;padding:52px 16px 26px;box-sizing:border-box;color:#fff">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px 0"><div onClick="{{ go.profile }}" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;cursor:pointer">close</div><span style="font:800 17px Unbounded">Crop photo</span><div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px">rotate_right</div></div>
+      <div style="position:relative;flex:1;margin:18px -16px 0;overflow:hidden">
+        <image-slot id="fsl-crop-photo" shape="rect" placeholder="Drop a photo to crop" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+        <div style="position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;box-shadow:0 0 0 999px rgba(5,3,8,.66);border:2.5px solid #fff;pointer-events:none"></div>
+        <div style="position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;pointer-events:none;background:linear-gradient(90deg,transparent 33%,rgba(255,255,255,.25) 33%,rgba(255,255,255,.25) calc(33% + 1px),transparent calc(33% + 1px),transparent 66%,rgba(255,255,255,.25) 66%,rgba(255,255,255,.25) calc(66% + 1px),transparent calc(66% + 1px)),linear-gradient(0deg,transparent 33%,rgba(255,255,255,.25) 33%,rgba(255,255,255,.25) calc(33% + 1px),transparent calc(33% + 1px),transparent 66%,rgba(255,255,255,.25) 66%,rgba(255,255,255,.25) calc(66% + 1px),transparent calc(66% + 1px))"></div>
+        <fsl-char c="me" tint="{{ look.tint }}" face="{{ look.face }}" acc="{{ look.acc }}" outfit="{{ look.outfit }}" style="position:absolute;left:50%;top:50%;margin:84px 0 0 70px;width:90px;height:90px;display:block;pointer-events:none"></fsl-char>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:18px;padding:0 6px"><span style="font-family:'Material Symbols Rounded';font-size:20px;opacity:.7">zoom_out</span><div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.18);position:relative"><div style="width:42%;height:100%;border-radius:3px;background:#c8f542"></div><div style="position:absolute;left:42%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4)"></div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;opacity:.7">zoom_in</span></div>
+      <div style="font:700 12.5px Nunito;opacity:.6;text-align:center;margin-top:12px">Pinch to zoom · drag to move · your character sits on top</div>
+      <div onClick="{{ go.profile }}" style="margin-top:14px;height:58px;border-radius:29px;background:#c8f542;color:#1c1330;display:flex;align-items:center;justify-content:center;font:900 17px Nunito;cursor:pointer">Use photo</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isJoined }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:60px 24px 28px;box-sizing:border-box;text-align:center">
+      <div style="position:absolute;inset:0;background:radial-gradient(60% 40% at 50% 38%,rgba(200,245,66,.28),transparent 70%)"></div>
+      <fsl-confetti style="position:absolute;inset:0;display:block"></fsl-confetti>
+      <div style="position:relative;width:360px;height:360px;margin-top:10px">
+        <div style="position:absolute;left:50%;top:50%;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:50%;border:2px dashed rgba(200,245,66,.4)"></div>
+        <fsl-char c="{{ me.c }}" v="{{ myV }}" idle="" style="position:absolute;left:105px;top:100px;width:150px;height:150px;display:block"></fsl-char>
+        <fsl-char c="partying" v="boy" idle="" style="position:absolute;left:10px;top:40px;width:96px;height:96px;display:block"></fsl-char>
+        <fsl-char c="toilet" v="girl" idle="" style="position:absolute;right:6px;top:30px;width:96px;height:96px;display:block"></fsl-char>
+        <fsl-char c="driving" v="boy" idle="" style="position:absolute;left:24px;bottom:30px;width:86px;height:86px;display:block"></fsl-char>
+        <fsl-char c="sleeping" v="neutral" idle="" style="position:absolute;right:20px;bottom:40px;width:88px;height:88px;display:block"></fsl-char>
+      </div>
+      <div style="position:relative;font:800 40px/1 Unbounded;letter-spacing:-.03em">You’re in!</div>
+      <div style="position:relative;margin-top:12px;font:700 16px/1.45 Nunito;color:var(--sub);max-width:300px">Welcome to <span style="color:var(--fg);font-weight:900">The Flat</span>. Léo, Maya, Tomás and Aiko can see you now.</div>
+      <div style="flex:1"></div>
+      <div onClick="{{ openSheetFromJoin }}" style="position:relative;align-self:stretch;height:60px;border-radius:30px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;font:900 17px Nunito;box-shadow:0 14px 30px rgba(160,210,40,.3),inset 0 2px 0 rgba(255,255,255,.5);cursor:pointer">Set your first status</div>
+      <div onClick="{{ go.home }}" style="position:relative;margin-top:6px;height:48px;display:flex;align-items:center;font:800 15px Nunito;color:var(--sub);cursor:pointer">Say hi to the group</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isGroup }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;padding:52px 16px 40px;box-sizing:border-box">
+      <div style="position:absolute;left:-40px;right:-40px;top:-60px;height:380px;background:radial-gradient(60% 55% at 50% 40%,rgba(123,77,255,.45),transparent 75%);pointer-events:none"></div>
+      <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:6px 4px 0">
+        <div onClick="{{ go.home }}" style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;cursor:pointer">arrow_back</div>
+        <span style="padding:6px 12px;border-radius:99px;background:rgba(200,245,66,.16);color:var(--acc);font:900 12px Nunito;letter-spacing:.06em">YOU’RE ADMIN</span>
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px">more_vert</div>
+      </div>
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;margin-top:10px">
+        <div style="position:relative;width:104px;height:104px;border-radius:36px;background:linear-gradient(145deg,#c9b6ff,#7b4dff);display:flex;align-items:center;justify-content:center;box-shadow:0 20px 40px rgba(90,40,180,.4),inset 0 2px 0 rgba(255,255,255,.4)"><span style="font-family:'Material Symbols Rounded';font-size:52px;color:#1c1330;font-variation-settings:'FILL' 1">home</span><fsl-char c="partying" v="boy" style="position:absolute;right:-18px;bottom:-12px;width:54px;height:54px;display:block"></fsl-char><span style="position:absolute;left:-6px;top:-6px;width:34px;height:34px;border-radius:50%;background:var(--fg);color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:18px">photo_camera</span></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:16px"><span style="font:800 28px Unbounded;letter-spacing:-.02em">The Flat</span><span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--sub)">edit</span></div>
+        <div style="font:700 13.5px Nunito;color:var(--sub);margin-top:4px">5 members · since March</div>
+        <div style="display:flex;gap:8px;margin-top:12px"><sc-for list="{{ gColors }}" as="c" hint-placeholder-count="5"><span style="width:26px;height:26px;border-radius:50%;background:{{ c.bg }};box-shadow:{{ c.ring }}"></span></sc-for></div>
+      </div>
+      <div style="position:relative;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:6px;margin-top:20px">
+        <div onClick="{{ openInvite }}" style="height:72px;border-radius:24px;background:var(--acc);color:var(--onacc);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font:900 13px Nunito;transition:border-radius .35s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:36px"><span style="font-family:'Material Symbols Rounded';font-size:24px">person_add</span>Invite</div>
+        <sc-for list="{{ gActions }}" as="a" hint-placeholder-count="3"><div onClick="{{ a.tap }}" style="height:72px;border-radius:24px;background:{{ a.bg }};color:{{ a.fg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font:900 12px Nunito;transition:border-radius .35s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:36px"><span style="font-family:'Material Symbols Rounded';font-size:22px;font-variation-settings:'FILL' {{ a.fill }}">{{ a.icon }}</span>{{ a.label }}</div></sc-for>
+      </div>
+      <div style="position:relative;margin-top:18px;padding:14px;border-radius:26px;background:var(--card);border:1px solid var(--line)">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:800 15px Nunito">Join requests</span><span style="min-width:22px;height:22px;border-radius:11px;background:#ff5c8a;color:#fff;font:900 12px/22px Nunito;text-align:center">{{ reqCount }}</span></div>
+        <sc-for list="{{ requests }}" as="r" hint-placeholder-count="2">
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+            <div style="position:relative;width:44px;height:44px;border-radius:50%;background:{{ r.av }};font:800 16px/44px Unbounded;text-align:center;color:#1c1330;flex:none">{{ r.i }}<fsl-char c="{{ r.c }}" v="{{ r.v }}" style="position:absolute;right:-8px;bottom:-6px;width:26px;height:26px;display:block"></fsl-char></div>
+            <div style="flex:1;min-width:0"><div style="font:800 14px Nunito">{{ r.n }}</div><div style="font:700 12px Nunito;color:var(--sub)">via code · {{ r.when }}</div></div>
+            <span onClick="{{ r.no }}" style="width:40px;height:40px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:20px;cursor:pointer">close</span>
+            <span onClick="{{ r.yes }}" style="height:40px;padding:0 14px;border-radius:20px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;font:900 13px Nunito;cursor:pointer">Approve</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="position:relative;display:flex;justify-content:space-between;align-items:baseline;padding:22px 6px 10px"><span style="font:800 16px Unbounded">Members</span><span style="font:800 12px Nunito;color:var(--sub)">Hold or tap ⋮ for options</span></div>
+      <div style="position:relative;display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ members }}" as="m" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 8px 10px 10px;border-radius:24px;background:var(--card);border:1px solid var(--line)">
+            <div style="position:relative;width:48px;height:48px;border-radius:50%;background:{{ m.av }};font:800 18px/48px Unbounded;text-align:center;color:#1c1330;flex:none">{{ m.i }}<fsl-char c="{{ m.c }}" v="{{ m.v }}" style="position:absolute;right:-10px;bottom:-8px;width:30px;height:30px;display:block"></fsl-char></div>
+            <div style="flex:1;min-width:0;padding-left:4px"><div style="display:flex;align-items:center;gap:6px"><span style="font:800 15px Nunito">{{ m.n }}</span><span style="padding:2px 8px;border-radius:8px;background:{{ m.roleBg }};color:{{ m.roleFg }};font:900 10.5px Nunito;letter-spacing:.04em">{{ m.role }}</span></div><div style="font:700 12.5px Nunito;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.s }}</div></div>
+            <span onClick="{{ m.menu }}" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;color:var(--sub);cursor:pointer">more_vert</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="position:relative;margin-top:16px;display:flex;flex-direction:column;gap:2px;border-radius:24px;overflow:hidden">
+        <sc-for list="{{ adminRows }}" as="a" hint-placeholder-count="3"><div onClick="{{ a.tap }}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:var(--vio)">{{ a.icon }}</span><span style="flex:1;font:800 14.5px Nunito">{{ a.label }}</span><span style="font:800 12.5px Nunito;color:var(--sub)">{{ a.value }}</span></div></sc-for>
+      </div>
+      <div onClick="{{ go.home }}" style="position:relative;margin-top:16px;height:52px;border-radius:26px;border:1.5px solid #ff6b7f;color:#ff6b7f;display:flex;align-items:center;justify-content:center;gap:8px;font:900 15px Nunito;cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:20px">logout</span>Leave group</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;left:0;right:0;bottom:0;height:88px;padding-bottom:12px;box-sizing:border-box;background:var(--nav);backdrop-filter:blur(24px);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="3">
+        <div onClick="{{ n.go }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;width:88px">
+          <div style="width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:24px;font-variation-settings:'FILL' {{ n.fill }};color:{{ n.color }};transition:background .3s">{{ n.icon }}</div>
+          <span style="font:800 12px Nunito;color:{{ n.color }}">{{ n.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ st.sheet }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(6,3,12,.62);backdrop-filter:blur(3px);animation:fslFade .25s ease-out"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;border-radius:34px 34px 0 0;background:var(--sheet);box-shadow:0 -20px 60px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);padding:12px 18px 26px;animation:fslUp .5s cubic-bezier(.2,1.25,.4,1)">
+      <div style="width:36px;height:4px;border-radius:2px;background:var(--sub);opacity:.5;margin:0 auto"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span style="font:800 21px Unbounded;letter-spacing:-.02em">What are you up to?</span><span onClick="{{ panic }}" style="margin-left:auto;margin-right:8px;height:40px;padding:0 14px 0 10px;border-radius:20px;background:linear-gradient(135deg,#ff6a5c,#ff3d7f);color:#fff;display:flex;align-items:center;gap:6px;font:900 13px Nunito;cursor:pointer;box-shadow:0 8px 20px rgba(255,61,127,.35);transition:border-radius .3s cubic-bezier(.3,1.6,.5,1),transform .3s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:12px;transform:scale(.92)"><span style="font-family:'Material Symbols Rounded';font-size:20px;font-variation-settings:'FILL' 1">e911_emergency</span>Panic</span><span onClick="{{ closeSheet }}" style="width:40px;height:40px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;cursor:pointer">close</span></div>
+      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:14px -18px 0;padding:0 18px">
+        <sc-for list="{{ cats }}" as="ct" hint-placeholder-count="6"><span onClick="{{ ct.pick }}" style="flex:none;display:flex;align-items:center;gap:5px;height:36px;padding:0 12px;border-radius:18px;background:{{ ct.bg }};color:{{ ct.fg }};font:900 13px Nunito;cursor:pointer;white-space:nowrap"><span style="font-family:'Material Symbols Rounded';font-size:17px;font-variation-settings:'FILL' 1">{{ ct.icon }}</span>{{ ct.label }}</span></sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px;max-height:212px;overflow-y:auto;scrollbar-width:none;padding:6px 4px;margin-left:-4px;margin-right:-4px">
+        <sc-for list="{{ picks }}" as="p" hint-placeholder-count="10">
+          <div onClick="{{ p.pick }}" style="position:relative;aspect-ratio:1;border-radius:22px;background:{{ p.bg }};box-shadow:{{ p.ring }};transform:{{ p.tf }};transition:transform .4s cubic-bezier(.3,1.7,.5,1),background .2s,border-radius .4s;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(.88)">
+            <fsl-char c="{{ p.key }}" v="{{ myV }}" style="width:78%;height:78%;display:block;filter:{{ p.fx }}"></fsl-char>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:16px;padding:6px 16px 6px 6px;border-radius:24px;background:var(--tonal);border:2px solid var(--acc)">
+        <div style="width:48px;height:48px;border-radius:18px;background:var(--card);display:flex;align-items:center;justify-content:center;flex:none"><fsl-char c="{{ st.pick }}" v="{{ myV }}" hue="{{ pickHueStr }}" acc="{{ pickAccStr }}" style="width:40px;height:40px;display:block"></fsl-char></div>
+        <div style="flex:1;min-width:0"><div style="font:800 11px Nunito;letter-spacing:.06em;color:var(--sub)">{{ pickLabel }}</div><input value="{{ st.text }}" onChange="{{ setText }}" maxLength="32" placeholder="add a line…" style="width:100%;border:0;background:transparent;color:var(--fg);font:800 17px Nunito;outline:none;padding:2px 0 0"></div>
+        <span style="font:800 12px Nunito;color:var(--sub)">{{ textCount }}/32</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:0 4px">
+        <span style="font:800 12px Nunito;color:var(--sub);margin-right:2px">Make it yours</span>
+        <sc-for list="{{ recolors }}" as="rc" hint-placeholder-count="4"><span onClick="{{ rc.pick }}" style="width:26px;height:26px;border-radius:50%;background:{{ rc.bg }};box-shadow:{{ rc.ring }};cursor:pointer"></span></sc-for>
+        <span style="width:1px;height:20px;background:var(--line)"></span>
+        <sc-for list="{{ pickAccs }}" as="pa" hint-placeholder-count="3"><span onClick="{{ pa.pick }}" style="width:30px;height:30px;border-radius:10px;background:{{ pa.bg }};display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:18px;cursor:pointer">{{ pa.icon }}</span></sc-for>
+        <span onClick="{{ toggleFav }}" style="margin-left:auto;width:34px;height:34px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:20px;color:{{ favStar.color }};font-variation-settings:'FILL' {{ favStar.fill }};cursor:pointer">star</span>
+      </div>
+      <sc-if value="{{ pickSensitive }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:12px;padding:12px;border-radius:22px;background:var(--card);border:1.5px solid rgba(255,92,138,.45)">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#ff5c8a;font-variation-settings:'FILL' 1">lock</span><span style="font:900 14px Nunito;flex:1">Who sees this?</span><span style="font:800 12px Nunito;color:var(--sub)">Others see <b style="color:var(--fg)">Busy</b></span></div>
+          <div style="display:flex;gap:6px;margin-top:10px"><sc-for list="{{ visOpts }}" as="vo" hint-placeholder-count="3"><span onClick="{{ vo.pick }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;height:40px;border-radius:14px;background:{{ vo.bg }};color:{{ vo.fg }};font:900 12.5px Nunito;cursor:pointer;white-space:nowrap"><span style="font-family:'Material Symbols Rounded';font-size:16px">{{ vo.icon }}</span>{{ vo.label }}</span></sc-for></div>
+          <div style="font:700 12px Nunito;color:var(--sub);margin-top:8px">{{ visNote }}</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ notSensitive }}" hint-placeholder-val="{{ true }}">
+      <div onClick="{{ toggleLoc }}" style="display:flex;align-items:center;gap:12px;margin-top:12px;padding:10px 12px;border-radius:22px;background:var(--card);border:1px solid var(--line);cursor:pointer">
+        <span style="width:40px;height:40px;border-radius:14px;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;color:var(--vio);font-variation-settings:'FILL' 1">near_me</span>
+        <div style="flex:1"><div style="font:800 15px Nunito">Share location</div><div style="font:700 12.5px Nunito;color:var(--sub)">{{ locSub }}</div></div>
+        <div style="width:52px;height:32px;border-radius:16px;background:{{ sw.track }};position:relative;transition:background .25s;flex:none"><div style="position:absolute;top:4px;left:{{ sw.left }}px;width:24px;height:24px;border-radius:50%;background:{{ sw.thumb }};transition:left .35s cubic-bezier(.3,1.6,.5,1)"></div></div>
+      </div>
+      </sc-if>
+      <div style="display:flex;gap:8px;margin-top:12px;align-items:center"><span style="font:800 12px Nunito;color:var(--sub);margin-right:2px;display:flex;align-items:center;gap:4px"><span style="font-family:'Material Symbols Rounded';font-size:16px">{{ expIcon }}</span>{{ expLabel }}</span>
+        <sc-for list="{{ expiries }}" as="x" hint-placeholder-count="4"><span onClick="{{ x.pick }}" style="padding:8px 12px;border-radius:14px;background:{{ x.bg }};color:{{ x.fg }};font:800 13px Nunito;cursor:pointer;white-space:nowrap">{{ x.label }}</span></sc-for>
+      </div>
+      <div onClick="{{ post }}" style="margin-top:16px;height:60px;border-radius:30px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;gap:8px;font:900 17px Nunito;box-shadow:0 14px 30px rgba(160,210,40,.3),inset 0 2px 0 rgba(255,255,255,.5);cursor:pointer;transition:border-radius .35s cubic-bezier(.3,1.6,.5,1),transform .35s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:18px;transform:scale(.97)">Post to The Flat<span style="font-family:'Material Symbols Rounded';font-size:22px">send</span></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasMenu }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeOverlays }}" style="position:absolute;inset:0;background:rgba(6,3,12,.6);animation:fslFade .2s ease-out"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;border-radius:34px 34px 0 0;background:var(--sheet);padding:12px 12px 28px;animation:fslUp .45s cubic-bezier(.2,1.25,.4,1)">
+      <div style="width:36px;height:4px;border-radius:2px;background:var(--sub);opacity:.5;margin:0 auto"></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:18px 12px 14px">
+        <div style="position:relative;width:60px;height:60px;border-radius:50%;background:{{ menuM.av }};font:800 22px/60px Unbounded;text-align:center;color:#1c1330">{{ menuM.i }}<fsl-char c="{{ menuM.c }}" v="{{ menuM.v }}" style="position:absolute;right:-14px;bottom:-10px;width:40px;height:40px;display:block"></fsl-char></div>
+        <div style="padding-left:6px"><div style="font:800 20px Unbounded">{{ menuM.n }}</div><div style="font:800 13px Nunito;color:var(--sub)">{{ menuM.role }} · joined in March</div></div>
+      </div>
+      <sc-for list="{{ menuItems }}" as="it" hint-placeholder-count="5"><div onClick="{{ it.tap }}" style="display:flex;align-items:center;gap:14px;height:56px;padding:0 14px;border-radius:18px;color:{{ it.fg }};cursor:pointer" style-hover="background:var(--tonal)"><span style="font-family:'Material Symbols Rounded';font-size:24px">{{ it.icon }}</span><span style="font:800 15.5px Nunito">{{ it.label }}</span></div></sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasConfirm }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:rgba(6,3,12,.66);animation:fslFade .2s ease-out"></div>
+    <div style="position:absolute;left:28px;right:28px;top:50%;transform:translateY(-50%);border-radius:32px;background:var(--sheet);padding:24px 22px 18px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.5);animation:fslPop .45s cubic-bezier(.2,1.5,.4,1)">
+      <div style="position:relative;width:110px;height:96px;margin:0 auto"><fsl-char c="{{ menuM.c }}" v="{{ menuM.v }}" idle="" style="position:absolute;left:10px;top:0;width:90px;height:90px;display:block"></fsl-char><span style="position:absolute;right:0;bottom:4px;width:34px;height:34px;border-radius:50%;background:#ff5c6e;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:20px">person_remove</span></div>
+      <div style="font:800 22px Unbounded;margin-top:12px;letter-spacing:-.02em">Remove {{ menuM.n }}?</div>
+      <div style="font:700 14.5px/1.45 Nunito;color:var(--sub);margin-top:8px;text-wrap:pretty">They’ll stop seeing The Flat’s statuses and locations. They can rejoin with a new invite.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px">
+        <div onClick="{{ closeOverlays }}" style="height:52px;border-radius:26px;background:var(--tonal);display:flex;align-items:center;justify-content:center;font:900 15px Nunito;cursor:pointer">Keep</div>
+        <div onClick="{{ doRemove }}" style="height:52px;border-radius:26px;background:#ff5c6e;color:#fff;display:flex;align-items:center;justify-content:center;font:900 15px Nunito;cursor:pointer;transition:border-radius .3s cubic-bezier(.3,1.6,.5,1)" style-active="border-radius:14px">Remove</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ st.invite }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeOverlays }}" style="position:absolute;inset:0;background:rgba(6,3,12,.6);animation:fslFade .2s ease-out"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;border-radius:34px 34px 0 0;background:var(--sheet);padding:12px 20px 26px;animation:fslUp .5s cubic-bezier(.2,1.25,.4,1)">
+      <div style="width:36px;height:4px;border-radius:2px;background:var(--sub);opacity:.5;margin:0 auto"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><div><div style="font:800 22px Unbounded;letter-spacing:-.02em">Invite to The Flat</div><div style="font:700 13px Nunito;color:var(--sub);margin-top:2px">{{ inv.expiryNote }}</div></div><span onClick="{{ closeOverlays }}" style="width:40px;height:40px;border-radius:50%;background:var(--tonal);display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Rounded';font-size:22px;cursor:pointer">close</span></div>
+      <div style="display:flex;gap:14px;align-items:center;margin-top:18px">
+        <div style="width:150px;height:150px;border-radius:28px;background:#fff;padding:12px;box-sizing:border-box;flex:none;box-shadow:0 14px 30px rgba(0,0,0,.25)"><fsl-qr data="{{ inv.code }}" style="display:block;width:100%;height:100%"></fsl-qr></div>
+        <div style="flex:1;min-width:0">
+          <div style="font:800 12px Nunito;letter-spacing:.08em;color:var(--sub)">CODE</div>
+          <div style="font:800 34px/1.1 Unbounded;letter-spacing:.04em;margin-top:4px">{{ inv.pretty }}</div>
+          <div style="font:800 13px Nunito;color:var(--vio);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">fsl.live/j/{{ inv.code }}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px">
+        <div onClick="{{ inv.copy }}" style="height:56px;border-radius:28px;background:var(--tonal);display:flex;align-items:center;justify-content:center;gap:8px;font:900 15px Nunito;cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:20px">content_copy</span>Copy code</div>
+        <div onClick="{{ inv.share }}" style="height:56px;border-radius:28px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;gap:8px;font:900 15px Nunito;cursor:pointer;box-shadow:0 12px 26px rgba(160,210,40,.3)"><span style="font-family:'Material Symbols Rounded';font-size:20px">share</span>Share link</div>
+      </div>
+      <div style="margin-top:18px;padding:14px;border-radius:24px;background:var(--card);border:1px solid var(--line)">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:800 14px Nunito">Code expires</span><span style="font:800 11px Nunito;color:var(--acc);letter-spacing:.06em">ADMIN</span></div>
+        <div style="display:flex;gap:6px;margin-top:10px"><sc-for list="{{ inv.expiries }}" as="x" hint-placeholder-count="4"><span onClick="{{ x.pick }}" style="flex:1;text-align:center;padding:9px 0;border-radius:14px;background:{{ x.bg }};color:{{ x.fg }};font:800 13px Nunito;cursor:pointer">{{ x.label }}</span></sc-for></div>
+        <div onClick="{{ inv.reset }}" style="display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);cursor:pointer"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#ff8a5c">autorenew</span><span style="flex:1;font:800 14px Nunito">Reset code</span><span style="font:700 12px Nunito;color:var(--sub)">old code stops working</span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;top:48px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:10px;padding:6px 16px 6px 6px;border-radius:99px;background:{{ t.toastBg }};color:var(--fg);box-shadow:0 14px 34px rgba(0,0,0,.35);backdrop-filter:blur(20px);white-space:nowrap;animation:fslDrop .5s cubic-bezier(.2,1.4,.4,1)"><fsl-char c="{{ st.toast.c }}" v="{{ st.toast.v }}" style="width:36px;height:36px;display:block"></fsl-char><span style="font:800 14px Nunito">{{ st.toast.txt }}</span><fsl-live size="7" style="color:{{ t.live }}"></fsl-live></div>
+  </sc-if>
+
+  <div style="position:absolute;left:0;right:0;top:0;height:40px;display:flex;justify-content:space-between;align-items:center;padding:4px 26px 0;box-sizing:border-box;font:800 14px Nunito;color:var(--fg);pointer-events:none;z-index:5"><span>9:41</span><span style="position:absolute;left:50%;top:14px;margin-left:-6px;width:12px;height:12px;border-radius:50%;background:#000"></span><span style="display:flex;gap:4px;align-items:center;font-family:'Material Symbols Rounded';font-size:17px;font-variation-settings:'FILL' 1">signal_cellular_alt wifi battery_5_bar</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;onb1&quot;,&quot;gender&quot;,&quot;onb2&quot;,&quot;onb3&quot;,&quot;onb4&quot;,&quot;joined&quot;,&quot;home&quot;,&quot;map&quot;,&quot;friend&quot;,&quot;privacy&quot;,&quot;group&quot;,&quot;profile&quot;,&quot;editor&quot;,&quot;crop&quot;,&quot;wconfig&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;gender&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;boy&quot;,&quot;girl&quot;,&quot;neutral&quot;],&quot;default&quot;:&quot;boy&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;group&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;flat&quot;,&quot;uni&quot;,&quot;gym&quot;,&quot;fam&quot;,&quot;one&quot;],&quot;default&quot;:&quot;all&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;live&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;frame&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  constructor(p){ super(p);
+    this.bigRef = React.createRef();
+    this.state = { screen:p.screen ?? 'home', sheet:p.sheet==='true'||p.sheet===true, me:{c:'gym',s:'leg day. pray 4 me',since:'18:02'},
+      pick:'gym', text:'leg day. pray 4 me', shareLoc:true, expiry:'3h', fi:1, ghost:false, precision:'approx',
+      vis:{flat:'Exact',uni:'Approx.',fam:'Status only'}, toast:null, code:'482913', avatar:2, nick:'Sam',
+      friends:[
+        {n:'Léo',c:'partying',s:'come to Loft 9',l:'Loft 9',d:'5.1 km',t:1,a:['#c9b6ff','#8a6cff'],x:.7,y:.24,h:[['coffee','pre-game espresso','17:20'],['gaming','ranked. don’t talk','15:02'],['sleeping','hungover. obviously','11:30']]},
+        {n:'Maya',c:'toilet',s:'do not call me',l:'Home',d:'1.2 km',t:4,a:['#ffc0d2','#ff7aa0'],x:.3,y:.38,h:[['eating','second lunch','14:10'],['work','meeting could’ve been an email','10:05'],['sleeping','5 more minutes','07:40']]},
+        {n:'Tomás',c:'driving',s:'5 min away. promise',l:'A100',d:'moving',t:8,a:['#b5f7d1','#3fcf8a'],x:.47,y:.72,h:[['work','shift ends at 6','15:30'],['coffee','third one','12:00'],['walking','walking the dog','08:15']]},
+        {n:'Jonas',c:'gym',s:'leg day. pray 4 me',l:'FitX Mitte',d:'2.8 km',t:12,a:['#aeeaff','#4fb6ff'],x:.6,y:.52,h:[['eating','protein everything','16:00'],['studying','pretending to study','12:30'],['sleeping','zzz','06:00']]},
+        {n:'Priya',c:'studying',s:'0 pages, 3 coffees',l:'Uni library',d:'2.3 km',t:26,a:['#ffe0a0','#ffab3d'],x:.2,y:.62,h:[['coffee','coffee #3','16:45'],['bored','this lecture is 3h','11:00'],['walking','late. running','08:50']]},
+        {n:'Aiko',c:'sleeping',s:'do not wake',l:'Home',d:'4.0 km',t:125,a:['#ecd4ff','#b98cff'],x:.82,y:.64,h:[['sick','bring soup','13:00'],['showering','singing, badly','09:20'],['gaming','one more game','02:10']]},
+      ]};
+    this.augment();
+  }
+  augment(){
+    const st=this.state; const V={Léo:'boy',Maya:'girl',Tomás:'boy',Jonas:'boy',Priya:'girl',Aiko:'neutral'};
+    const G={Léo:['flat','uni'],Maya:['flat','uni','one'],Tomás:['flat','gym'],Jonas:['gym'],Priya:['uni'],Aiko:['flat']};
+    st.friends.forEach(f=>{f.v=V[f.n];f.g=G[f.n];});
+    st.friends.push(
+      {n:'Zara',v:'girl',g:['uni'],c:'shopping',s:'retail therapy',l:'Mall',d:'3.4 km',t:18,a:['#ffd0e6','#ff5ca8'],x:.35,y:.3,h:[['coffee','iced latte','14:00'],['studying','quiz at 10','09:30']]},
+      {n:'Kofi',v:'boy',g:['gym'],c:'football',s:'2–1 LETS GOOO',l:'Home',d:'1.8 km',t:6,a:['#c8f59a','#5fb814'],x:.66,y:.4,h:[['gym','chest day','17:00'],['eating','post-gym feast','18:10']]},
+      {n:'Kai',v:'neutral',g:['one'],c:'cooking',s:'making your fave',l:'Home',d:'0.4 km',t:3,a:['#ffe6a0','#ffb13d'],x:.52,y:.45,h:[['walking','groceries run','17:40'],['work','last call, promise','15:00']]},
+      {n:'Mum',v:'girl',g:['fam'],c:'meditating',s:'yoga, call you after',l:'Home',d:'42 km',t:34,a:['#e0d0ff','#a07cff'],x:.12,y:.2,h:[['cooking','Sunday roast prep','12:00']]},
+      {n:'Dad',v:'boy',g:['fam'],c:'barber',s:'fresh cut',l:'Salon 21',d:'41 km',t:52,a:['#b8d8ff','#4f86ff'],x:.9,y:.18,h:[['driving','on the A7','10:30']]}
+    );
+    const ov=this.props.overlay;
+    Object.assign(st,{roles:{Sam:'Admin','Léo':'Admin'}, removed:[], requests:[['Noah','boy','free','2 min ago',['#b8d8ff','#4f86ff']],['Elif','girl','inlove','1 h ago',['#ffd0e6','#ff5ca8']]],
+      menuFor: (ov==='menu'||ov==='confirm')?'Tomás':null, confirm: ov==='confirm', invite: ov==='invite', code:'482913', codeExp:'7 days', muted:false, hiddenW:false});
+    st.gender = this.props.gender ?? 'boy'; st.group = this.props.group ?? 'all'; st.showAll=false;
+  }
+  componentDidMount(){
+    this.t1=setTimeout(()=>this.forceUpdate(),400); this.t2=setTimeout(()=>this.forceUpdate(),1500);
+    if (this.props.sensitive) this.setState({pick:'spicy2',text:'on fire',cat:'body',me:{c:'period2',s:'chocolate mode',since:'18:20',exp:60,expLeft:38,hue:0,acc:'none',sens:true}});
+    if (String(this.props.live) === 'false') return;
+    const pool=[['free','who’s out??'],['coffee','flat white o’clock'],['bored','entertain me'],['eating','snack attack'],['walking','touching grass'],['showering','singing, badly'],['gaming','one more game'],['dnd','no.'],['partying','afters at mine']];
+    this.iv=setInterval(()=>{ this.setState(st=>{ const fr=st.friends.map(f=>({...f,t:f.t+1})); const i=Math.floor(Math.random()*fr.length); const p=pool[Math.floor(Math.random()*pool.length)];
+      if(fr[i].c===p[0]) return {friends:fr}; fr[i]={...fr[i],c:p[0],s:p[1],t:0}; return {friends:fr,toast:{c:p[0],v:fr[i].v,txt:fr[i].n+' · '+p[1]}}; });
+      clearTimeout(this.tt); this.tt=setTimeout(()=>this.setState({toast:null}),3200); },11000);
+  }
+  componentWillUnmount(){ clearInterval(this.iv); clearTimeout(this.tt); }
+  componentDidUpdate(pp){ const p=this.props; if(pp.screen!==p.screen && p.screen) this.setState({screen:p.screen}); if(pp.gender!==p.gender && p.gender) this.setState({gender:p.gender}); if(pp.group!==p.group && p.group) this.setState({group:p.group}); }
+  toast(c,txt){ this.setState({toast:{c,txt}}); clearTimeout(this.tt); this.tt=setTimeout(()=>this.setState({toast:null}),2600); }
+  ago(t){ return t<1?'just now':t<60?t+' min ago':Math.floor(t/60)+' h ago'; }
+  renderVals() {
+    const dark = (this.props.theme ?? 'dark') !== 'light', st=this.state, s=st.screen;
+    const T = dark ? {bg:'#0e0a17',fg:'#f6f2ff',sub:'rgba(246,242,255,.6)',card:'rgba(255,255,255,.055)',line:'rgba(255,255,255,.08)',acc:'#c8f542',onAcc:'#1c1330',tonal:'rgba(255,255,255,.08)',nav:'rgba(18,13,28,.82)',vio:'#b39dff',sheet:'#1a1524',ring:'#17111f',live:'#c8f542',toastBg:'rgba(40,32,56,.92)',
+        aura:'radial-gradient(70% 40% at 0% 0%,rgba(130,90,255,.4),transparent 70%),radial-gradient(60% 35% at 100% 30%,rgba(255,92,168,.2),transparent 70%),radial-gradient(70% 40% at 50% 110%,rgba(80,120,255,.18),transparent 70%)',grain:.2,
+        hero:'linear-gradient(135deg,#7b4dff 0%,#c04bd6 60%,#ff6fa5 100%)',cardSh:'inset 0 1px 0 rgba(255,255,255,.05)'}
+      : {bg:'#f6f2ec',fg:'#1c1330',sub:'rgba(28,19,48,.58)',card:'#ffffff',line:'rgba(28,19,48,.05)',acc:'#c8f542',onAcc:'#1c1330',tonal:'rgba(28,19,48,.06)',nav:'rgba(255,255,255,.86)',vio:'#6a3cff',sheet:'#fffdf9',ring:'#ffffff',live:'#2fb34a',toastBg:'rgba(255,255,255,.95)',
+        aura:'radial-gradient(70% 40% at 0% 0%,rgba(160,130,255,.25),transparent 70%),radial-gradient(60% 35% at 100% 30%,rgba(255,150,190,.18),transparent 70%)',grain:.1,
+        hero:'linear-gradient(135deg,#6a3cff 0%,#b44bd6 60%,#ff6fa5 100%)',cardSh:'0 8px 24px rgba(60,30,120,.07)'};
+    const icons={Home:'home','Uni library':'school','FitX Mitte':'fitness_center','Loft 9':'nightlife',A100:'directions_car'};
+    const friends=[...st.friends].map((f,i)=>({...f,idx:i})).filter(f=>st.group==='all'||(f.g||[]).includes(st.group)).sort((a,b)=>a.t-b.t).map(f=>({...f,i:f.n[0],ago:this.ago(f.t),av:`linear-gradient(145deg,${f.a[0]},${f.a[1]})`,
+      glow:`radial-gradient(circle at 50% 60%,${f.a[1]}66,${f.a[1]}14 70%)`,icon:icons[f.l]||'location_on',timeColor:f.t<5?T.live:T.sub,
+      open:()=>this.setState({screen:'friend',fi:f.idx})}));
+    const navDef=[['home','Friends','group'],['map','Map','map'],['profile','You','person']];
+    const nav=navDef.map(([k,label,icon])=>{const on=s===k||(k==='profile'&&s==='privacy'); return {label,icon,fill:on?1:0,pill:on?(dark?'rgba(200,245,66,.18)':'#c8f542'):'transparent',color:on?(dark?'#c8f542':'#1c1330'):T.sub,go:()=>this.setState({screen:k,sheet:false})};});
+    const bezel = this.props.frame===false||this.props.frame==='false' ? 0 : 10;
+    return {
+      t:T, bezel, frameW:412+bezel*2, frameH:892+bezel*2, frameShadow: bezel?'0 0 0 2px #2a2733,0 40px 90px rgba(0,0,0,.55)':'none',
+      screenLabel:{home:'Home feed',map:'Map',friend:'Friend detail',privacy:'Privacy',gender:'Onboarding · gender',group:'Group settings',joined:'You joined',profile:'Profile',editor:'Character editor',crop:'Photo crop',wconfig:'Widget config',onb1:'Onboarding 1',onb2:'Onboarding 2',onb3:'Onboarding 3',onb4:'Onboarding 4'}[s]||s,
+      isHome:s==='home', isMap:s==='map', isFriend:s==='friend', isPrivacy:s==='privacy', isOnb1:s==='onb1', isOnb2:s==='onb2', isOnb3:s==='onb3', isOnb4:s==='onb4',
+      showNav:['home','map','privacy','profile'].includes(s), nav,
+      friends, friendsTop:friends.slice(0,4), liveCount:friends.filter(f=>f.t<60).length,
+      me:st.me, meLabel:(window.FSL&&FSL.list.find(c=>c.key===st.me.c)||{label:'Status'}).label.toUpperCase(), meMeta:'Since '+st.me.since+' · visible to The Flat',
+      openSheet:()=>this.setState({sheet:true,pick:st.me.c,text:st.me.s}),
+      ...this.extraVals(T,dark,friends),
+      ...this.groupVals(T,dark,friends),
+      ...this.adminVals(T,dark),
+      ...this.profVals(T,dark),
+      ...this.pickerVals(T,dark)
+    };
+  }
+  groupVals(T,dark,friends){
+    const st=this.state;
+    const GR=[['all','All','apps',['#e8e4ff','#9a8cff']],['flat','The Flat','home',['#c9b6ff','#7b4dff']],['uni','Uni crew','school',['#ffe0a0','#ff9f1c']],['gym','Gym bros','fitness_center',['#aeeaff','#2f8cff']],['fam','Family','family_restroom',['#ffc0d2','#ff4f7d']],['one','1-on-1','favorite',['#ffd0e6','#ff5ca8']]];
+    const cur=GR.find(g=>g[0]===st.group)||GR[0];
+    const L=k=>((window.FSL&&FSL.list.find(c=>c.key===k))||{label:''}).label;
+    return {
+      myV: st.gender,
+      chips: GR.map(([k,name,icon,a])=>{const on=st.group===k; return {name,icon,bg:on?T.acc:T.tonal,fg:on?T.onAcc:T.fg,iconBg:`linear-gradient(145deg,${a[0]},${a[1]})`,go:()=>this.setState({group:k})};}),
+      curGroup:{name:cur[0]==='all'?'Everyone':cur[1], icon:cur[2], bg:`linear-gradient(145deg,${cur[3][0]},${cur[3][1]})`, count:friends.length},
+      isOne: st.group==='one', notOne: st.group!=='one',
+      ones: friends.map(f=>({...f, myC:st.me.c, myS:st.me.s, label:L(f.c)})),
+      openGroup:()=>this.setState({screen:'group'}),
+      setGender:g=>this.setState({gender:g}),
+      isGender: st.screen==='gender',
+      genders: [['boy','Boy','caps · chains · stubble','linear-gradient(160deg,#4a5bd0,#1d1a5a)','radial-gradient(70% 50% at 50% 30%,rgba(120,160,255,.5),transparent 70%)'],['girl','Girl','bows · lashes · blush','linear-gradient(160deg,#ff7ab6,#8a2a8a)','radial-gradient(70% 50% at 50% 30%,rgba(255,190,230,.55),transparent 70%)']].map(([v,label,sub,bg,aura])=>{const on=st.gender===v; return {v,label,sub,bg,aura,on,hero:'free',
+        ring:on?`0 0 0 3px ${T.bg},0 0 0 6px ${T.acc},0 20px 40px rgba(0,0,0,.35)`:'0 14px 30px rgba(0,0,0,.25)', tf:on?`rotate(${v==='boy'?-2:2}deg) scale(1.02)`:'scale(.96)', bump:String(on?(st.bump||0):0),
+        pick:()=>this.setState(s=>({gender:v,bump:(s.bump||0)+1}))};}),
+      neutralOpt:{bg:st.gender==='neutral'?(dark?'rgba(255,210,58,.16)':'#fff3c4'):T.tonal, ring:st.gender==='neutral'?`inset 0 0 0 2px ${T.acc}`:'none', check:st.gender==='neutral'?T.acc:'transparent', bump:String(st.gender==='neutral'?(st.bump||0):0)},
+      pickNeutral:()=>this.setState(s=>({gender:'neutral',bump:(s.bump||0)+1})),
+      toGenderCreate:()=>this.setState({screen:'gender',next:'onb3'}),
+      toGenderJoin:()=>this.setState({screen:'gender',next:'onb2'}),
+      genderNext:()=>this.setState(s=>({screen:s.next||'onb3'}))
+    };
+  }
+  pickerVals(T,dark){
+    const st=this.state, g=st.gender;
+    const CAT={daily:['toilet','sleeping','eating','showering','coffee','cooking','cleaning','shopping','walking','driving','traveling','movie'],mood:['inlove','heartbroken','angry','crying','bored','overthinking','maincharacter','meditating'],
+      body:['period','period2','period3','spicy','spicy2','spicy3','gym','sick','hungover','lowbattery','football','barber','beard'],social:['partying','date','free','hookah','gaming','custom'],busy:['work','studying','traffic','dnd','busy']};
+    const GIRL=['period','period2','period3'], BOY=['football','barber','beard'], SENS=['period','period2','period3','spicy','spicy2','spicy3'];
+    const ok=k=>st.showAll||g==='neutral'||(g==='boy'?!GIRL.includes(k):!BOY.includes(k));
+    const favKeys=st.favKeys||['coffee','gym','toilet','free','spicy'];
+    const cat=st.cat||'fav', keys=(cat==='fav'?favKeys:CAT[cat]).filter(ok);
+    const lab=k=>((window.FSL&&FSL.list.find(c=>c.key===k))||{label:k}).label;
+    const sticker='drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 6px 6px rgba(0,0,0,.35))';
+    const sens=SENS.includes(st.pick);
+    const vis=st.vis2||'one';
+    const exps=sens?['30 min','1 h','2 h','Custom']:['30 min','1 h','3 h','Never'];
+    const exp=exps.includes(st.expiry)?st.expiry:exps[1];
+    return {
+      cats:[['fav','Favorites','star'],['daily','Daily life','sunny'],['mood','Mood','mood'],['body','Body','favorite'],['social','Social','celebration'],['busy','Busy','work']].map(([k,label,icon])=>{const on=cat===k; return {label,icon,bg:on?T.fg:T.tonal,fg:on?T.bg:T.fg,pick:()=>this.setState({cat:k})};}),
+      picks: keys.map((key,i)=>{const on=st.pick===key; return {key,bg:on?(dark?'rgba(200,245,66,.2)':'#eaffb0'):T.tonal,ring:on?`inset 0 0 0 2.5px ${T.acc}`:(SENS.includes(key)?'inset 0 0 0 1.5px rgba(255,92,138,.5)':'none'),tf:on?`scale(1.1) rotate(${i%2?4:-4}deg)`:'none',fx:on?sticker:'none',
+        pick:()=>this.setState({pick:key,text:key==='custom'?'':lab(key).toLowerCase()})};}),
+      pickLabel: lab(st.pick).toUpperCase()+(sens?' · PRIVATE':''),
+      recolors:[0,60,150,250].map(h=>({bg:`linear-gradient(145deg,hsl(${(80+h)%360} 90% 70%),hsl(${(80+h)%360} 70% 45%))`,ring:(st.pickHue||0)===h?`0 0 0 2px ${T.bg},0 0 0 4px ${T.fg}`:'none',pick:()=>this.setState({pickHue:h})})),
+      pickAccs:[['none','block'],['cap','sports_baseball'],['bow','featured_seasonal_and_gifts'],['crown','crown']].map(([a,icon])=>({icon,bg:(st.pickAcc||'none')===a?T.fg:T.tonal,pick:()=>this.setState({pickAcc:a})})).map((o,i)=>({...o,icon:o.icon})),
+      pickHueStr:String(st.pickHue||0), pickAccStr:st.pickAcc||'none',
+      favStar:{color:favKeys.includes(st.pick)?'#ffd23a':T.sub,fill:favKeys.includes(st.pick)?1:0},
+      toggleFav:()=>this.setState(s=>{const f=s.favKeys||['coffee','gym','toilet','free','spicy']; return {favKeys:f.includes(s.pick)?f.filter(x=>x!==s.pick):[...f,s.pick]};}),
+      pickSensitive:sens, notSensitive:!sens,
+      visOpts:[['all','Everyone','public'],['groups','Groups…','group'],['one','1-on-1 only','favorite']].map(([k,label,icon])=>({label,icon,bg:vis===k?T.fg:T.tonal,fg:vis===k?T.bg:T.fg,pick:()=>this.setState({vis2:k})})),
+      visNote: vis==='all'?'Everyone in your groups sees it.':vis==='groups'?'Only The Flat sees it. Uni crew, Gym bros and Family see Busy.':'Only Maya and Kai see it. Everyone else sees Busy.',
+      expiries: exps.map(l=>({label:l,bg:exp===l?T.fg:T.tonal,fg:exp===l?T.bg:T.fg,pick:()=>this.setState({expiry:l})})),
+      expIcon: sens?'timer':'schedule', expLabel: sens?'Auto-reset':'Clear after',
+      post:()=>{ const c=st.pick; const mins={'30 min':30,'1 h':60,'2 h':120,'3 h':180,'Custom':45}[exp]; this.setState({sheet:false,me:{c,s:st.text||lab(c).toLowerCase(),since:new Date().toTimeString().slice(0,5),exp:sens?mins:null,expLeft:sens?mins:null,hue:st.pickHue||0,acc:st.pickAcc||'none',sens}}); this.toast(c,sens?'Private status · resets in '+exp:'Posted to The Flat'); },
+      panic:()=>{ this.setState({sheet:false,me:{c:'busy',s:'busy',since:new Date().toTimeString().slice(0,5),exp:null,hue:0,acc:'none'}}); this.toast('busy','Panic: Busy everywhere · private history hidden'); },
+      meRing: st.me.exp? {on:true,dash:Math.round(251*(st.me.expLeft||st.me.exp)/st.me.exp)+' 251',left:(st.me.expLeft||st.me.exp)+'m'}:{on:false}
+    };
+  }
+  profVals(T,dark){
+    const st=this.state, O=(window.FSL&&FSL.meOpts)||{tints:[],faces:[],accs:[],outfits:[]}, g=st.gender;
+    const F_mix=(a,b,t)=>(window.FSL&&FSL.mix)?FSL.mix(a,b,t):a, F_light=c=>F_mix(c,'#ffffff',.5), F_dark=c=>F_mix(c,'#1c1330',.4), F_glow=c=>F_mix(c,'#1c1330',.1)+'88';
+    const DEF={boy:{tint:'#8fb8ff',face:'smug',acc:'cap',outfit:'hoodie'},girl:{tint:'#ff8cc4',face:'happy',acc:'bow',outfit:'cardigan'},neutral:{tint:'#ffd23a',face:'cheeky',acc:'bucket',outfit:'tee'}};
+    const lk={...DEF[g],...(st.look||{})};
+    const setL=p=>this.setState(s=>({look:{...DEF[s.gender],...(s.look||{}),...p}}));
+    const lvl=(lk.acc!=='none')+(lk.outfit!=='none')+(lk.face!=='happy')+1;
+    const tab=st.edTab||'items', allI=!!st.allItems;
+    const fits=v=>allI||v==='all'||v===g;
+    const list = tab==='face'?O.faces.map(([k,l])=>({k,l,face:k,acc:lk.acc,outfit:lk.outfit,sel:lk.face===k,pick:()=>setL({face:k})}))
+      : tab==='outfit'?O.outfits.filter(o=>fits(o[2])).map(([k,l])=>({k,l,face:lk.face,acc:lk.acc,outfit:k,sel:lk.outfit===k,pick:()=>setL({outfit:k})}))
+      : O.accs.filter(o=>fits(o[2])).map(([k,l])=>({k,l,face:lk.face,acc:k,outfit:lk.outfit,sel:lk.acc===k,pick:()=>setL({acc:k})}));
+    const sw=on=>on?{track:T.acc,thumb:'#1c1330',left:on===2?21:24}:{track:T.tonal,thumb:T.sub,left:4};
+    const FAV={boy:[['coffee',0,'none'],['gym',0,'none'],['football',0,'none'],['free',140,'crown']],girl:[['coffee',0,'none'],['period2',0,'none'],['toilet',0,'none'],['free',140,'crown']],neutral:[['coffee',0,'none'],['sleeping',0,'none'],['movie',0,'none'],['free',140,'crown']]}[g];
+    return {
+      isProfile: st.screen==='profile', isEditor: st.screen==='editor', isCrop: st.screen==='crop',
+      prof:{aura:dark?'radial-gradient(55% 55% at 50% 40%,rgba(123,77,255,.45),transparent 75%)':'radial-gradient(55% 55% at 50% 40%,rgba(160,130,255,.3),transparent 75%)',stats:[{n:3,l:'groups'},{n:2,l:'1-on-1s'},{n:14,l:'friends'}]},
+      look:{...lk, glow:F_glow(lk.tint), lvl, stars:[1,2,3,4].map(i=>({c:i<=lvl?'#ffd23a':'rgba(255,255,255,.2)'}))},
+      favs: FAV.map(([key,hue,acc])=>({key,hue:String(hue),acc,use:()=>this.setState(s=>({me:{...s.me,c:key}}))})),
+      vOpts: [['boy','Boy'],['girl','Girl'],['neutral','Neutral']].map(([v,label])=>{const on=g===v; return {v,label,bg:on?T.fg:'transparent',fg:on?T.bg:T.fg,r:on?'18px':'14px',pick:()=>this.setState({gender:v,look:null})};}),
+      toggleShowAll:()=>this.setState(s=>({showAll:!s.showAll})), swAll: sw(st.showAll),
+      edTabs: [['color','Color','palette'],['face','Face','mood'],['items','Items','checkroom'],['outfit','Outfit','apparel']].map(([k,label,icon])=>{const on=tab===k; return {label,icon,bg:on?T.fg:'transparent',fg:on?T.bg:T.fg,r:on?'18px':'14px',pick:()=>this.setState({edTab:k})};}),
+      edIsColor: tab==='color', edNotColor: tab!=='color',
+      edSwatches: O.tints.map(c=>({bg:`radial-gradient(circle at 35% 30%,${F_light(c)},${c} 55%,${F_dark(c)})`,ring:lk.tint===c?`0 0 0 3px ${T.bg},0 0 0 6px ${T.acc}`:'inset 0 -3px 6px rgba(0,0,0,.2)',pick:()=>setL({tint:c})})),
+      edItems: list.map((o,i)=>({label:o.l,face:o.face,acc:o.acc,outfit:o.outfit,bg:o.sel?(dark?'rgba(200,245,66,.18)':'#eaffb0'):T.tonal,ring:o.sel?`inset 0 0 0 2.5px ${T.acc}`:'none',tf:o.sel?`rotate(${i%2?3:-3}deg) scale(1.05)`:'none',pick:o.pick})),
+      toggleAllItems:()=>this.setState(s=>({allItems:!s.allItems})), swItems: allI?{track:T.acc,thumb:'#1c1330',left:21}:{track:T.tonal,thumb:T.sub,left:3},
+      edSetLabel: allI?'mixing freely':({boy:'boy set',girl:'girl set',neutral:'neutral set'})[g],
+      randomize:()=>{const r=a=>a[Math.floor(Math.random()*a.length)]; setL({tint:r(O.tints),face:r(O.faces)[0],acc:r(O.accs.filter(o=>fits(o[2])))[0],outfit:r(O.outfits.filter(o=>fits(o[2])))[0]});},
+      saveLook:()=>{this.setState({screen:'profile'}); this.toast('maincharacter','Look saved');}
+    };
+  }
+  adminVals(T,dark){
+    const st=this.state, all=st.friends;
+    const names=['Sam','Léo','Maya','Tomás','Aiko'].filter(n=>!st.removed.includes(n));
+    const mk=n=>{ if(n==='Sam'){const AV=[['#ffc0d2','#ff7aa0'],['#c9b6ff','#8a6cff'],['#e8ff8a','#9ad61e'],['#aeeaff','#4fb6ff'],['#ffe0a0','#ffab3d'],['#b5f7d1','#3fcf8a']][st.avatar]; return {n:'Sam (you)',key:n,i:'S',c:st.me.c,v:st.gender,s:st.me.s,av:`linear-gradient(145deg,${AV[0]},${AV[1]})`};}
+      const f=all.find(x=>x.n===n); return {n,key:n,i:n[0],c:f.c,v:f.v,s:f.s,av:`linear-gradient(145deg,${f.a[0]},${f.a[1]})`}; };
+    const withRole=m=>{const r=st.roles[m.key]||'Member'; return {...m,role:r.toUpperCase(),roleBg:r==='Admin'?(dark?'rgba(200,245,66,.18)':'#eaffb0'):T.tonal,roleFg:r==='Admin'?(dark?'#c8f542':'#3d5a00'):T.sub,menu:()=>this.setState({menuFor:m.key})};};
+    const members=names.map(mk).map(withRole);
+    const mm=st.menuFor?withRole(mk(st.menuFor)):null; const isAdm=mm&&st.roles[mm.key]==='Admin';
+    const close=()=>this.setState({menuFor:null,confirm:false,invite:false});
+    const pretty=st.code.slice(0,3)+' '+st.code.slice(3);
+    return {
+      isGroup: st.screen==='group', isJoined: st.screen==='joined',
+      openSheetFromJoin:()=>this.setState({screen:'home',sheet:true}),
+      gColors: ['#7b4dff','#ff5ca8','#2f8cff','#ff9f1c','#3fcf8a'].map((c,i)=>({bg:c,ring:i===0?`0 0 0 2px ${T.bg},0 0 0 4px ${T.fg}`:'none'})),
+      gActions:[{label:st.muted?'Muted':'Mute',icon:st.muted?'notifications_off':'notifications',fill:st.muted?1:0,bg:st.muted?T.fg:T.tonal,fg:st.muted?T.bg:T.fg,tap:()=>this.setState(s=>({muted:!s.muted}))},
+        {label:st.hiddenW?'Hidden':'Widgets',icon:st.hiddenW?'hide_source':'widgets',fill:st.hiddenW?1:0,bg:st.hiddenW?T.fg:T.tonal,fg:st.hiddenW?T.bg:T.fg,tap:()=>this.setState(s=>({hiddenW:!s.hiddenW}))},
+        {label:'QR',icon:'qr_code_2',fill:0,bg:T.tonal,fg:T.fg,tap:()=>this.setState({invite:true})}],
+      openInvite:()=>this.setState({invite:true}),
+      requests: st.requests.map(([n,v,c,when,a])=>({n,v,c,when,i:n[0],av:`linear-gradient(145deg,${a[0]},${a[1]})`,
+        yes:()=>{this.setState(s=>({requests:s.requests.filter(r=>r[0]!==n)})); this.toast(c,n+' joined The Flat');}, no:()=>this.setState(s=>({requests:s.requests.filter(r=>r[0]!==n)}))})),
+      reqCount: st.requests.length,
+      members,
+      adminRows:[{icon:'edit',label:'Rename group',value:'The Flat',tap:()=>{}},{icon:'palette',label:'Icon & color',value:'Violet',tap:()=>{}},{icon:'qr_code_2',label:'Invite code',value:pretty+' · '+st.codeExp,tap:()=>this.setState({invite:true})},{icon:'shield_person',label:'Who can invite',value:'Admins',tap:()=>{}}],
+      hasMenu: !!mm && !st.confirm, hasConfirm: !!mm && st.confirm, menuM: mm||{},
+      menuItems: mm? [{icon:isAdm?'remove_moderator':'add_moderator',label:isAdm?'Remove admin':'Make admin',fg:T.fg,tap:()=>{this.setState(s=>({roles:{...s.roles,[mm.key]:isAdm?'Member':'Admin'},menuFor:null})); this.toast(mm.c,mm.n+(isAdm?' is a member now':' is now admin'));}},
+        {icon:'touch_app',label:'Poke',fg:T.fg,tap:()=>{close(); this.toast(mm.c,'You poked '+mm.n);}},{icon:'notifications_off',label:'Mute their updates',fg:T.fg,tap:close},{icon:'person',label:'View profile',fg:T.fg,tap:close},
+        {icon:'person_remove',label:'Remove from group',fg:'#ff6b7f',tap:()=>this.setState({confirm:true})}] : [],
+      doRemove:()=>{ const n=st.menuFor; this.setState(s=>({removed:[...s.removed,n],menuFor:null,confirm:false})); this.toast('busy',n+' was removed'); },
+      closeOverlays: close,
+      inv:{code:st.code,pretty,expiryNote:'Code valid for '+st.codeExp,
+        copy:()=>this.toast('free','Code copied'), share:()=>this.toast('partying','Share sheet opens'),
+        reset:()=>{const c=String(Math.floor(100000+Math.random()*900000)); this.setState({code:c}); this.toast('busy','New code: '+c.slice(0,3)+' '+c.slice(3));},
+        expiries:['24 h','7 days','30 days','Never'].map(l=>({label:l,bg:st.codeExp===l?T.fg:T.tonal,fg:st.codeExp===l?T.bg:T.fg,pick:()=>this.setState({codeExp:l})}))}
+    };
+  }
+  extraVals(T,dark,friends){
+    const st=this.state;
+    const go={}; ['gender','group','invite','joined','profile','editor','crop','wconfig','onb1','onb2','onb3','onb4','home','map','friend','privacy'].forEach(k=>go[k]=()=>this.setState({screen:k,sheet:false}));
+    const AV=[['#ffc0d2','#ff7aa0'],['#c9b6ff','#8a6cff'],['#e8ff8a','#9ad61e'],['#aeeaff','#4fb6ff'],['#ffe0a0','#ffab3d'],['#b5f7d1','#3fcf8a']];
+    return { go, st,
+      codeDigits: st.code.split('').map((v,i)=>({v,border:i===5?T.acc:'transparent'})),
+      avatars: AV.map((a,i)=>({bg:`linear-gradient(145deg,${a[0]},${a[1]})`,ring:i===st.avatar?`0 0 0 3px ${T.bg},0 0 0 6px ${T.acc}`:'none',pick:()=>this.setState({avatar:i})})),
+      avatarBg:`linear-gradient(145deg,${AV[st.avatar][0]},${AV[st.avatar][1]})`, nickInitial:(st.nick||'?')[0].toUpperCase(),
+      setNick:e=>this.setState({nick:e.target.value}),
+      ...this.moreVals(T,dark,friends) };
+  }
+  moreVals(T,dark,friends){
+    const st=this.state;
+    const KEYS=[['toilet','On the toilet'],['sleeping','Sleeping'],['eating','Eating'],['gym','At the gym'],['studying','Studying'],['work','At work'],['driving','Driving'],['gaming','Gaming'],['partying','Partying'],['showering','Showering'],['coffee','Coffee break'],['sick','Sick'],['walking','Out walking'],['dnd','Do not disturb'],['bored','Bored'],['free','Free · hit me up'],['custom','Custom']];
+    const lab=k=>(KEYS.find(x=>x[0]===k)||['',''])[1];
+    const sticker='drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 6px 6px rgba(0,0,0,.35))';
+    return {
+      picks: KEYS.map(([key],i)=>{const on=st.pick===key; return {key, bg:on?(dark?'rgba(200,245,66,.2)':'#eaffb0'):T.tonal, ring:on?`inset 0 0 0 2.5px ${T.acc}`:'none', tf:on?`scale(1.1) rotate(${i%2?4:-4}deg)`:'none', fx:on?sticker:'none',
+        pick:()=>this.setState(s=>({pick:key,text:s.text&&s.text!==lab(s.pick).toLowerCase()?s.text:(key==='custom'?'':lab(key).toLowerCase())}))};}),
+      pickLabel: lab(st.pick).toUpperCase(), textCount:(st.text||'').length,
+      setText:e=>this.setState({text:e.target.value}),
+      toggleLoc:()=>this.setState(s=>({shareLoc:!s.shareLoc})),
+      locSub: st.shareLoc?'Approximate · shows as “FitX Mitte”':'Off · friends only see your status',
+      sw: st.shareLoc?{track:T.acc,thumb:'#1c1330',left:24}:{track:T.tonal,thumb:T.sub,left:4},
+      expiries: ['30 min','1 h','3 h','Never'].map(l=>({label:l,bg:st.expiry===l?T.fg:T.tonal,fg:st.expiry===l?T.bg:T.fg,pick:()=>this.setState({expiry:l})})),
+      closeSheet:()=>this.setState({sheet:false}),
+      post:()=>{ const c=st.pick; this.setState({sheet:false,me:{c,s:st.text||lab(c).toLowerCase(),since:new Date().toTimeString().slice(0,5)}}); this.toast(c,'Posted to The Flat'); },
+      hasToast: !!st.toast,
+      ...this.lastVals(T,dark,friends) };
+  }
+  lastVals(T,dark,friends){
+    const st=this.state;
+    const M = dark ? {mapBg:'#130e1d',street:'#211a2e',road:'#2e2540',park:'#17291f',river:'#1a2346',mapLabel:'rgba(255,255,255,.22)',mapVignette:'rgba(8,5,14,.75)',pinBg:'#1d1729',glass:'rgba(30,24,42,.78)'}
+      : {mapBg:'#ece6dc',street:'#ffffff',road:'#f7d98c',park:'#cfe8c4',river:'#b9d6f2',mapLabel:'rgba(28,19,48,.3)',mapVignette:'rgba(246,242,236,.5)',pinBg:'#ffffff',glass:'rgba(255,255,255,.88)'};
+    Object.assign(T,M);
+    const sel = st.mapSel ?? friends[0]?.idx;
+    const pins = friends.map(f=>({...f, x:Math.round(f.x*412), y:Math.round(f.y*892), col:f.a[1], scale:f.idx===sel?1.12:.86, z:f.idx===sel?3:1,
+      cardRing: f.idx===sel?`inset 0 0 0 2px ${f.a[1]},0 10px 30px rgba(0,0,0,.25)`:'0 10px 30px rgba(0,0,0,.2)',
+      select:()=>this.setState({mapSel:f.idx})}));
+    return { pins, ...this.detailVals(T,dark,friends) };
+  }
+  detailVals(T,dark,friends){
+    const st=this.state;
+    const f = friends.find(x=>x.idx===st.fi) || friends[0];
+    const L={toilet:'On the toilet',sleeping:'Sleeping',eating:'Eating',gym:'At the gym',studying:'Studying',work:'At work',driving:'Driving',gaming:'Gaming',partying:'Partying',showering:'Showering',coffee:'Coffee break',sick:'Sick',walking:'Out walking',dnd:'Do not disturb',bored:'Bored',free:'Free · hit me up',custom:'Custom'};
+    const hist=[[f.c,f.s,'now']].concat(f.h).map(([c,s,time],i)=>({c,s,time,label:L[c]||'',bg:i===0?`${f.a[1]}33`:T.tonal,ring:i===0?`inset 0 0 0 2px ${f.a[1]}`:'none'}));
+    const bump=(msg)=>{ this.bigRef.current&&this.bigRef.current.bounce&&this.bigRef.current.bounce(); this.toast(f.c,msg); };
+    return {
+      bigRef:this.bigRef,
+      fr:{...f, hist, hCount:hist.length, aura:`radial-gradient(50% 45% at 50% 42%,${f.a[1]}66,${f.a[1]}1a 60%,transparent 75%)`},
+      react:{poke:()=>bump('You poked '+f.n), laugh:()=>bump(f.n+' got a laugh'), out:()=>bump('Asked '+f.n+' to come out')},
+      ...this.privVals(T,dark) };
+  }
+  privVals(T,dark){
+    const st=this.state, on=st.ghost;
+    const PR=[['exact','Exact','my_location','Friends see your pin on the map and the place name.'],['approx','Approx.','blur_on','Friends see a label like “Uni” or “2.3 km away”. Your pin is fuzzed to ~500 m.'],['off','Off','location_off','Only your status is shared. No map pin, no distance.']];
+    const LV=['Exact','Approx.','Status only'];
+    const G=[['flat','The Flat',6,'toilet','partying'],['uni','Uni crew',12,'studying','coffee'],['fam','Family',4,'eating','sleeping']];
+    return {
+      toggleGhost:()=>this.setState(s=>({ghost:!s.ghost})),
+      gh: on ? {bg:'linear-gradient(135deg,#2b2340,#15101f)',fg:'#f6f2ff',sh:'inset 0 0 0 1.5px rgba(200,245,66,.5)',iconBg:'rgba(200,245,66,.16)',icon:'visibility_off',shape:'50%',sub:'You’re invisible. Friends see your last status as “ghosted”.',track:T.acc,thumb:'#1c1330',left:24}
+        : {bg:T.card,fg:T.fg,sh:T.cardSh,iconBg:T.tonal,icon:'visibility',shape:'20px',sub:'Hide status and location from everyone, instantly.',track:T.tonal,thumb:T.sub,left:4},
+      precisions: PR.map(([k,label,icon])=>{const s=st.precision===k; return {label,icon,bg:s?T.fg:'transparent',fg:s?T.bg:T.fg,r:s?'18px':'14px',pick:()=>this.setState({precision:k})};}),
+      precisionSub:(PR.find(p=>p[0]===st.precision)||PR[1])[3],
+      groups: G.map(([k,name,members,c1,c2])=>{const lv=st.vis[k]; const i=LV.indexOf(lv); return {name,members,c1,c2,level:lv,
+        bg: i===0?(dark?'rgba(200,245,66,.18)':'#eaffb0'):i===1?(dark?'rgba(179,157,255,.18)':'#e8e0ff'):T.tonal, fg: i===0?(dark?'#c8f542':'#3d5a00'):i===1?T.vio:T.sub,
+        cycle:()=>this.setState(s=>({vis:{...s.vis,[k]:LV[(LV.indexOf(s.vis[k])+1)%3]}}))};})
+    };
+  }
+}
+</script>
+</body>
+</html>

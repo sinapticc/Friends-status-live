@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<script src="./fsl-chars.js"></script>
+<script src="./fsl-chars-a.js"></script>
+<script src="./fsl-chars-b.js"></script>
+<script src="./fsl-chars-c.js"></script>
+<script src="./fsl-chars-d.js"></script>
+<script src="./fsl-chars-e.js"></script>
+<script src="./fsl-chars-f.js"></script>
+<script src="./fsl-chars-v.js"></script>
+<style>body{margin:0;background:#07050c;font-family:Nunito,system-ui,sans-serif}a{color:#c8f542}a:hover{color:#e4ff9a}</style>
+</helmet>
+<div style="padding:48px;display:flex;justify-content:center">
+<div data-screen-label="Character sheet v2" style="position:relative;width:1680px;border-radius:40px;overflow:hidden;background:#110c1c;color:#f4f0ff;box-shadow:0 40px 120px rgba(0,0,0,.6)">
+  <div style="position:absolute;inset:0;background:radial-gradient(40% 25% at 10% 0%,rgba(150,110,255,.35),transparent 70%),radial-gradient(40% 25% at 100% 10%,rgba(255,92,168,.22),transparent 70%),radial-gradient(50% 20% at 50% 100%,rgba(200,245,66,.12),transparent 70%)"></div>
+  <div style="position:relative;padding:64px 72px 72px">
+    <div style="display:flex;align-items:center;gap:10px;font:800 14px Nunito;letter-spacing:.14em;text-transform:uppercase;color:#c8f542"><fsl-live size="9"></fsl-live>Friends status live</div>
+    <h1 style="margin:14px 0 0;font:800 64px/1 Unbounded,sans-serif;letter-spacing:-.02em">The Squad Sheet · v2</h1>
+    <p style="margin:16px 0 0;max-width:760px;font:600 18px/1.5 Nunito;color:rgba(244,240,255,.66);text-wrap:pretty">{{ total }} statuses, each in three versions. Boy: cooler palette, caps, stubble. Girl: pastel palette, lashes, bows. Neutral: fresh palette, bucket hats. Friends always appear in their own version.</p>
+    <div style="display:flex;gap:24px;margin-top:22px;font:800 13px Nunito;color:rgba(244,240,255,.6)"><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:4px;background:#5b6fd6"></span>Boy</span><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:4px;background:#ff8cc4"></span>Girl</span><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:4px;background:#ffd23a"></span>Neutral</span></div>
+    <sc-for list="{{ cats }}" as="cat" hint-placeholder-count="5">
+      <div style="margin-top:52px">
+        <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:18px"><span style="font:800 28px Unbounded;letter-spacing:-.01em">{{ cat.name }}</span><span style="font:700 14px Nunito;color:rgba(244,240,255,.5)">{{ cat.note }}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+          <sc-for list="{{ cat.items }}" as="it" hint-placeholder-count="8">
+            <div style="padding:14px 14px 16px;border-radius:28px;background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)">
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
+                <sc-for list="{{ it.vs }}" as="vv" hint-placeholder-count="3">
+                  <div style="position:relative;aspect-ratio:1;border-radius:20px;background:{{ vv.bg }};display:flex;align-items:center;justify-content:center;opacity:{{ vv.op }}"><fsl-char c="{{ it.key }}" v="{{ vv.v }}" style="width:86%;height:86%;display:block"></fsl-char><span style="position:absolute;left:8px;top:6px;font:900 10px Nunito;color:{{ vv.dot }}">{{ vv.tag }}</span></div>
+                </sc-for>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding:0 4px"><span style="font:800 15px Nunito">{{ it.label }}</span><span style="font:700 12px Nunito;color:rgba(244,240,255,.45)">{{ it.note }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const C = [
+      ['Daily life','',[['toilet','On the toilet','scroll · selfie · comic'],['sleeping','Sleeping','hoodie · silk mask · burrito'],['eating','Eating'],['showering','Showering'],['coffee','Coffee break'],['cooking','Cooking'],['cleaning','Cleaning'],['shopping','Shopping'],['walking','Out walking'],['driving','Driving'],['traveling','Traveling'],['movie','Watching a movie']]],
+      ['Mood','',[['inlove','In love'],['heartbroken','Heartbroken'],['angry','Angry'],['crying','Crying'],['bored','Bored'],['overthinking','Overthinking'],['maincharacter','Main character'],['meditating','Meditating']]],
+      ['Body','Spicy has three levels',[['gym','At the gym','flex · yoga · hydrate'],['sick','Sick'],['hungover','Hungover'],['lowbattery','Low battery'],['spicy','Mildly spicy','level 1'],['spicy2','On fire','level 2'],['spicy3','Send help','level 3']]],
+      ['Social','',[['partying','Partying'],['date','On a date'],['free','Free · hit me up'],['hookah','Hookah break'],['gaming','Gaming'],['custom','Custom']]],
+      ['Busy','',[['work','At work'],['studying','Studying'],['traffic','Stuck in traffic'],['dnd','Do not disturb'],['busy','Busy','panic-button fallback']]],
+      ['Version-specific','Girl-only and boy-only by default. Neutral gets all of them. Anyone can turn on “show all statuses”.',[['period','Period · cramps','girl','g'],['period2','Chocolate mode','girl','g'],['period3','Don’t talk to me','girl','g'],['football','Watching football','boy','b'],['barber','At the barber','boy','b'],['beard','Beard trim','boy','b']]]
+    ];
+    const V=[['boy','B','#8fa0ff','rgba(91,111,214,.16)'],['girl','G','#ff9cc8','rgba(255,140,196,.14)'],['neutral','N','#ffd23a','rgba(255,210,58,.12)']];
+    let total=0;
+    const cats=C.map(([name,note,items])=>({name,note,items:items.map(([key,label,n,only])=>{total++; return {key,label,note:n&&!only?n:(only?(only==='g'?'girl + neutral':'boy + neutral'):''),
+      vs:V.map(([v,tag,dot,bg])=>({v,tag,dot,bg,op:only&&((only==='g'&&v==='boy')||(only==='b'&&v==='girl'))?.28:1}))};})}));
+    return { cats, total };
+  }
+}
+</script>
+</body>
+</html>
