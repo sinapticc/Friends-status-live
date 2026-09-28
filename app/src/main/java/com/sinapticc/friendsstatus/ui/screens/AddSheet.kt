@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sinapticc.friendsstatus.data.AppStore
 import com.sinapticc.friendsstatus.model.Catalog
+import com.sinapticc.friendsstatus.model.t
 import com.sinapticc.friendsstatus.ui.components.BottomSheet
 import com.sinapticc.friendsstatus.ui.components.IconCircle
 import com.sinapticc.friendsstatus.ui.components.Label
@@ -111,23 +112,23 @@ fun BoxScope.AddSheet(store: AppStore) {
     var color by remember { mutableIntStateOf(0) }
     BottomSheet(s.overlays.addOpen, store::closeOverlays, horizontalPadding = 20) {
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Title("اضافه کردن", 22, modifier = Modifier.weight(1f))
-            IconCircle(Icons.Rounded.Close, "بستن", size = 40.dp, onClick = store::closeOverlays)
+            Title(t("اضافه کردن", "Add"), 22, modifier = Modifier.weight(1f))
+            IconCircle(Icons.Rounded.Close, t("بستن", "Close"), size = 40.dp, onClick = store::closeOverlays)
         }
-        Label("کد دعوت گروه (۶ رقم) یا کد دونفره‌ی یه رفیق (۷ حرف)", 13, t.sub, FontWeight.Bold, Modifier.padding(top = 12.dp))
-        Field(code, { code = it.take(12) }, "مثلاً ۴۸۲۹۱۳", Modifier.padding(top = 8.dp))
-        Box(Modifier.padding(top = 10.dp)) { PrimaryButton("پیوستن", { store.joinAnyCode(code) }, height = 52.dp, fontSize = 15, enabled = code.isNotBlank()) }
+        Label(t("کد ۶ رقمی گروه یا کد ۷ حرفی دونفره", "6-digit group code or 7-letter 1-on-1 code"), 13, t.sub, FontWeight.Bold, Modifier.padding(top = 12.dp))
+        Field(code, { code = it.take(12) }, t("مثلاً ۴۸۲۹۱۳", "e.g. 482913"), Modifier.padding(top = 8.dp))
+        Box(Modifier.padding(top = 10.dp)) { PrimaryButton(t("عضو شو", "Join"), { store.joinAnyCode(code) }, height = 52.dp, fontSize = 15, enabled = code.isNotBlank()) }
 
         Row(Modifier.fillMaxWidth().padding(top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f).height(1.dp).background(t.line))
-            Label("یا یه گروه تازه بساز", 12, t.sub, modifier = Modifier.padding(horizontal = 12.dp))
+            Label(t("یا یه گروه تازه بساز", "or start a new group"), 12, t.sub, modifier = Modifier.padding(horizontal = 12.dp))
             Box(Modifier.weight(1f).height(1.dp).background(t.line))
         }
-        Field(name, { name = it.take(30) }, "اسم گروه", Modifier.padding(top = 12.dp))
+        Field(name, { name = it.take(30) }, t("اسم گروه", "Group name"), Modifier.padding(top = 12.dp))
         IconColorPicker(icon, color, { icon = it }, { color = it })
-        Box(Modifier.padding(top = 12.dp)) { TonalButton("ساختن گروه", { store.createNewGroup(name, icon) }, height = 52.dp, fontSize = 15) }
+        Box(Modifier.padding(top = 12.dp)) { TonalButton(t("بساز", "Create"), { store.createNewGroup(name, icon) }, height = 52.dp, fontSize = 15) }
         if (s.pairCode.isNotEmpty()) {
-            Label("کد دونفره‌ی خودت توی پروفایله؛ بفرستش برای رفیقت.", 12, t.sub, FontWeight.Bold, Modifier.padding(top = 12.dp))
+            Label(t("کد دونفره‌ت توی پروفایله؛ بفرستش برای رفیقت.", "Your 1-on-1 code is in your profile; send it to your friend."), 12, t.sub, FontWeight.Bold, Modifier.padding(top = 12.dp))
         }
     }
 }
@@ -142,11 +143,11 @@ fun BoxScope.RenameSheet(store: AppStore) {
     var color by remember(g?.id, s.overlays.renameOpen) { mutableIntStateOf(g?.color ?: 0) }
     BottomSheet(s.overlays.renameOpen && g != null, store::closeOverlays, horizontalPadding = 20) {
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Title("اسم و ظاهر گروه", 22, modifier = Modifier.weight(1f))
-            IconCircle(Icons.Rounded.Close, "بستن", size = 40.dp, onClick = store::closeOverlays)
+            Title(t("اسم و ظاهر گروه", "Group name & look"), 22, modifier = Modifier.weight(1f))
+            IconCircle(Icons.Rounded.Close, t("بستن", "Close"), size = 40.dp, onClick = store::closeOverlays)
         }
-        Field(name, { name = it.take(30) }, "اسم گروه", Modifier.padding(top = 14.dp))
+        Field(name, { name = it.take(30) }, t("اسم گروه", "Group name"), Modifier.padding(top = 14.dp))
         IconColorPicker(icon, color, { icon = it }, { color = it })
-        Column(Modifier.padding(top = 16.dp)) { PrimaryButton("ذخیره", { store.renameGroup(name, icon, color) }, height = 54.dp, enabled = name.isNotBlank()) }
+        Column(Modifier.padding(top = 16.dp)) { PrimaryButton(t("ذخیره", "Save"), { store.renameGroup(name, icon, color) }, height = 54.dp, enabled = name.isNotBlank()) }
     }
 }

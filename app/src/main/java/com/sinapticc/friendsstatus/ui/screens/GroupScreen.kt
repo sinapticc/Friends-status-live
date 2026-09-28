@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddModerator
 import androidx.compose.material.icons.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Autorenew
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ContentCopy
@@ -54,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import com.sinapticc.friendsstatus.data.AppStore
 import com.sinapticc.friendsstatus.model.Catalog
 import com.sinapticc.friendsstatus.model.Fa
+import com.sinapticc.friendsstatus.model.t
 import com.sinapticc.friendsstatus.ui.components.BottomSheet
 import com.sinapticc.friendsstatus.ui.components.IconCircle
 import com.sinapticc.friendsstatus.ui.components.InitialAvatar
@@ -83,14 +85,13 @@ private fun members(store: AppStore): List<Member> {
     val myId = store.myId()
     return g.members.map { m ->
         val (a, b) = Catalog.avatarColors[m.avatar.coerceIn(0, Catalog.avatarColors.lastIndex)]
-        if (m.id == myId) Member(m.id, "${s.nick} (تو)", s.me.key, s.me.text, a, b, m.admin, true)
+        if (m.id == myId) Member(m.id, "${s.nick} (${t("من", "Me")})", s.me.key, Catalog.displayText(s.me.key, s.me.text), a, b, m.admin, true)
         else {
             val f = s.friends.firstOrNull { it.id == m.id }
-            Member(m.id, m.nick, f?.status ?: "custom", f?.text ?: "", f?.colorA ?: a, f?.colorB ?: b, m.admin, false)
+            Member(m.id, m.nick, f?.status ?: "custom", Catalog.displayText(f?.status ?: "custom", f?.text ?: ""), f?.colorA ?: a, f?.colorB ?: b, m.admin, false)
         }
     }.sortedBy { !it.me }
 }
-
 @Composable
 fun GroupScreen(store: AppStore) {
     val s = store.state
@@ -109,13 +110,13 @@ fun GroupScreen(store: AppStore) {
             )
         }) {
             TopBar(
-                start = { IconCircle(Icons.Rounded.ArrowForward, "برگشت", iconSize = 24.dp, onClick = store::back) },
+                start = { IconCircle(if (com.sinapticc.friendsstatus.model.L10n.isFa) Icons.Rounded.ArrowForward else Icons.Rounded.ArrowBack, t("برگشت", "Back"), iconSize = 24.dp, onClick = store::back) },
                 middle = {
                     if (g.admin) Box(Modifier.clip(RoundedCornerShape(99.dp)).background(t.acc.copy(alpha = .16f)).padding(horizontal = 12.dp, vertical = 6.dp)) {
-                        Label("تو مدیری", 12, t.acc, FontWeight.Black)
+                        Label(t("تو مدیری", "You're admin"), 12, t.acc, FontWeight.Black)
                     }
                 },
-                end = { if (g.admin) IconCircle(Icons.Rounded.Edit, "ویرایش گروه", iconSize = 22.dp, onClick = store::openRename) },
+                end = { if (g.admin) IconCircle(Icons.Rounded.Edit, t("ویرایش گروه", "Edit group"), iconSize = 22.dp, onClick = store::openRename) },
             )
             Column(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.size(104.dp)) {
@@ -131,20 +132,18 @@ fun GroupScreen(store: AppStore) {
                     StatusChar(ms.firstOrNull { !it.me }?.status ?: "partying", Modifier.align(Alignment.BottomEnd).offset(x = 18.dp, y = 12.dp).size(54.dp))
                 }
                 Title(g.name, 28, modifier = Modifier.padding(top = 16.dp), maxLines = 1)
-                Label("${Fa.num(ms.size)} عضو", 13, t.sub, FontWeight.Bold)
+                Label(t("${Fa.num(ms.size)} نفر", "${Fa.num(ms.size)} people"), 13, t.sub, FontWeight.Bold)
             }
 
-            // Actions
             Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 val hidden = g.id in s.widgetHidden
-                ActionTile(Icons.Rounded.PersonAdd, "دعوت", t.acc, t.onAcc, Modifier.weight(1.4f), store::openInvite)
-                ActionTile(if (g.muted) Icons.Rounded.NotificationsOff else Icons.Rounded.Notifications, if (g.muted) "بی‌صدا شد" else "بی‌صدا", if (g.muted) t.fg else t.tonal, if (g.muted) t.bg else t.fg, Modifier.weight(1f), store::toggleMute)
-                ActionTile(if (hidden) Icons.Rounded.HideSource else Icons.Rounded.Widgets, if (hidden) "مخفی شد" else "ویجت‌ها", if (hidden) t.fg else t.tonal, if (hidden) t.bg else t.fg, Modifier.weight(1f), store::toggleWidgets)
-                ActionTile(Icons.Rounded.QrCode2, "کد QR", t.tonal, t.fg, Modifier.weight(1f), store::openInvite)
+                ActionTile(Icons.Rounded.PersonAdd, t("دعوت", "Invite"), t.acc, t.onAcc, Modifier.weight(1.4f), store::openInvite)
+                ActionTile(if (hidden) Icons.Rounded.HideSource else Icons.Rounded.Widgets, if (hidden) t("مخفی شد", "Hidden") else t("ویجت‌ها", "Widgets"), if (hidden) t.fg else t.tonal, if (hidden) t.bg else t.fg, Modifier.weight(1f), store::toggleWidgets)
+                ActionTile(Icons.Rounded.QrCode2, t("کد QR", "QR code"), t.tonal, t.fg, Modifier.weight(1f), store::openInvite)
             }
 
-            SectionHeader("اعضا", "برای گزینه‌ها روی ⋮ بزن")
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            SectionHeader(t("اعضا", "Members"))
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 ms.forEach { m ->
                     val admin = m.admin
                     Row(
@@ -166,13 +165,13 @@ fun GroupScreen(store: AppStore) {
                                 Label(m.name, 15, t.fg)
                                 RowSpacer(6.dp)
                                 Box(Modifier.clip(RoundedCornerShape(8.dp)).background(if (admin) t.selectedBg else t.tonal).padding(horizontal = 8.dp, vertical = 2.dp)) {
-                                    Label(if (admin) "مدیر" else "عضو", 11, if (admin) t.adminFg else t.sub, FontWeight.Black)
+                                    Label(if (admin) t("مدیر", "Admin") else t("عضو", "Member"), 11, if (admin) t.adminFg else t.sub, FontWeight.Black)
                                 }
                             }
                             Label(m.text, 12, t.sub, FontWeight.Bold, maxLines = 1)
                         }
                         if (!m.me && g.admin) {
-                            IconCircle(Icons.Rounded.MoreVert, "گزینه‌ها", size = 40.dp, bg = Color.Transparent, tint = t.sub, onClick = { store.openMemberMenu(m.id) })
+                            IconCircle(Icons.Rounded.MoreVert, t("گزینه‌ها", "Options"), size = 40.dp, bg = Color.Transparent, tint = t.sub, onClick = { store.openMemberMenu(m.id) })
                         }
                     }
                 }
@@ -181,11 +180,11 @@ fun GroupScreen(store: AppStore) {
             Box(Modifier.padding(top = 16.dp)) {
                 SettingsGroup {
                     if (g.admin) {
-                        SettingsRow(Icons.Rounded.Edit, "تغییر نام گروه", g.name, onClick = store::openRename)
-                        SettingsRow(Icons.Rounded.Palette, "آیکون و رنگ", Catalog.groupColorNames[g.color.coerceIn(0, 4)], onClick = store::openRename)
-                        g.code?.let { c -> SettingsRow(Icons.Rounded.QrCode2, "کد دعوت", "${Fa.code(c)} · ${expiryText(g.codeTtl)}", onClick = store::openInvite) }
+                        SettingsRow(Icons.Rounded.Edit, t("تغییر نام گروه", "Rename group"), g.name, onClick = store::openRename)
+                        SettingsRow(Icons.Rounded.Palette, t("آیکون و رنگ", "Icon & color"), Catalog.groupColorNames[g.color.coerceIn(0, 4)], onClick = store::openRename)
+                        g.code?.let { c -> SettingsRow(Icons.Rounded.QrCode2, t("کد دعوت", "Invite code"), "${Fa.code(c)} · ${expiryText(g.codeTtl)}", onClick = store::openInvite) }
                     }
-                    SettingsRow(Icons.Rounded.AdminPanelSettings, "کی می‌تونه دعوت کنه", "مدیرها") { }
+                    SettingsRow(Icons.Rounded.AdminPanelSettings, t("کی می‌تونه دعوت کنه", "Who can invite"), t("مدیرها", "Admins")) { }
                 }
             }
             Row(
@@ -201,7 +200,7 @@ fun GroupScreen(store: AppStore) {
             ) {
                 Icon(Icons.Rounded.Logout, null, Modifier.size(20.dp).mirror(), tint = Danger)
                 RowSpacer(8.dp)
-                Label("ترک گروه", 15, Danger, FontWeight.Black)
+                Label(t("خروج از گروه", "Leave group"), 15, Danger, FontWeight.Black)
             }
         }
 
@@ -212,7 +211,7 @@ fun GroupScreen(store: AppStore) {
     }
 }
 
-private fun expiryText(e: String) = when (e) { "24h" -> "۲۴ ساعت"; "7d" -> "۷ روز"; "30d" -> "۳۰ روز"; else -> "همیشه" }
+private fun expiryText(e: String) = when (e) { "24h" -> t("۲۴ ساعت", "24 hours"); "7d" -> t("۷ روز", "7 days"); "30d" -> t("۳۰ روز", "30 days"); else -> t("همیشه", "Always") }
 
 @Composable
 private fun ActionTile(icon: ImageVector, label: String, bg: Color, fg: Color, modifier: Modifier, onClick: () -> Unit) {
@@ -248,16 +247,15 @@ private fun androidx.compose.foundation.layout.BoxScope.MemberMenu(store: AppSto
             RowSpacer(20.dp)
             Column {
                 Title(m.name, 22)
-                Label(if (admin) "مدیر" else "عضو", 13, t.sub)
+                Label(if (admin) t("مدیر", "Admin") else t("عضو", "Member"), 13, t.sub)
             }
         }
-        MenuItem(if (admin) Icons.Rounded.RemoveModerator else Icons.Rounded.AddModerator, if (admin) "برداشتن مدیریت" else "مدیر کردن", t.fg, store::toggleAdmin)
-        MenuItem(Icons.Rounded.TouchApp, "سقلمه", t.fg, store::pokeMember)
-        MenuItem(Icons.Rounded.Person, "دیدن پروفایل", t.fg) { store.closeOverlays(); store.openFriend(m.id) }
-        MenuItem(Icons.Rounded.PersonRemove, "حذف از گروه", Danger, store::askRemove)
+        MenuItem(if (admin) Icons.Rounded.RemoveModerator else Icons.Rounded.AddModerator, if (admin) t("دیگه مدیر نباشه", "Remove as admin") else t("مدیرش کن", "Make admin"), t.fg, store::toggleAdmin)
+        MenuItem(Icons.Rounded.TouchApp, t("سقلمه", "Nudge"), t.fg, store::pokeMember)
+        MenuItem(Icons.Rounded.Person, t("پروفایلش", "Their profile"), t.fg) { store.closeOverlays(); store.openFriend(m.id) }
+        MenuItem(Icons.Rounded.PersonRemove, t("حذف از گروه", "Remove from group"), Danger, store::askRemove)
     }
 }
-
 @Composable
 private fun MenuItem(icon: ImageVector, label: String, color: Color, onClick: () -> Unit) {
     Row(
@@ -288,17 +286,17 @@ private fun androidx.compose.foundation.layout.BoxScope.RemoveConfirm(store: App
             StatusChar(m.status, Modifier.align(Alignment.TopCenter).size(90.dp), idle = true)
             IconCircle(Icons.Rounded.PersonRemove, null, Modifier.align(Alignment.BottomEnd), size = 34.dp, iconSize = 20.dp, bg = Color(0xFFFF5C6E), tint = Color.White)
         }
-        Title("${m.name} حذف بشه؟", 22, modifier = Modifier.padding(top = 12.dp))
+        Title(t("${m.name} حذف بشه؟", "${m.name} remove?"), 22, modifier = Modifier.padding(top = 12.dp))
         Label(
-            "دیگه وضعیت‌ها و مکان‌های «${s.activeGroup?.name ?: ""}» رو نمی‌بینه. با یه دعوت جدید می‌تونه برگرده.",
+            t("دیگه وضعیت‌های «${s.activeGroup?.name ?: "گروه"}» رو نمی‌بینه. با دعوت دوباره برمی‌گرده.", "They won't see «${s.activeGroup?.name ?: "the group"}» statuses anymore. They can return with an invite."),
             14, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp),
         )
         Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(26.dp)).background(t.tonal).tap(store::closeOverlays), contentAlignment = Alignment.Center) {
-                Label("بمونه", 15, t.fg, FontWeight.Black)
+                Label(t("بمونه", "Keep"), 15, t.fg, FontWeight.Black)
             }
             Box(Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(26.dp)).background(Color(0xFFFF5C6E)).pressTap(.95f, store::doRemove), contentAlignment = Alignment.Center) {
-                Label("حذف", 15, Color.White, FontWeight.Black)
+                Label(t("حذف", "Remove"), 15, Color.White, FontWeight.Black)
             }
         }
     }
@@ -316,13 +314,13 @@ private fun androidx.compose.foundation.layout.BoxScope.InviteSheet(store: AppSt
         if (g == null) return@BottomSheet
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Title("دعوت به «${g.name}»", 22, maxLines = 1)
-                Label(if (code == null) "فقط مدیرها کد دعوت رو می‌بینن" else if (g.codeTtl == "never") "کد همیشه معتبره" else "کد تا ${expiryText(g.codeTtl)} معتبره", 13, t.sub, FontWeight.Bold)
+                Title(t("دعوت به «${g.name}»", "Invite to «${g.name}»"), 22, maxLines = 1)
+                Label(if (code == null) t("فقط مدیرها کد دعوت رو می‌بینن", "Only admins see the invite code") else if (g.codeTtl == "never") t("کد همیشه کار می‌کنه", "Code works forever") else t("کد تا ${expiryText(g.codeTtl)} معتبره", "Code valid until ${expiryText(g.codeTtl)}"), 13, t.sub, FontWeight.Bold)
             }
-            IconCircle(Icons.Rounded.Close, "بستن", size = 40.dp, onClick = store::closeOverlays)
+            IconCircle(Icons.Rounded.Close, t("بستن", "Close"), size = 40.dp, onClick = store::closeOverlays)
         }
         if (code == null) {
-            Label("از یکی از مدیرهای گروه بخواه کد دعوت رو برات بفرسته.", 14, t.sub, FontWeight.Bold, Modifier.padding(top = 16.dp))
+            Label(t("از مدیر گروه بخواه کد رو برات بفرسته.", "Ask the group admin to send you the code."), 14, t.sub, FontWeight.Bold, Modifier.padding(top = 16.dp))
             return@BottomSheet
         }
         Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -331,7 +329,7 @@ private fun androidx.compose.foundation.layout.BoxScope.InviteSheet(store: AppSt
             }
             RowSpacer(14.dp)
             Column(Modifier.weight(1f)) {
-                Label("کد", 12, t.sub)
+                Label(t("کد", "Code"), 12, t.sub)
                 // Digits read left to right even inside the right-to-left layout.
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     Title(Fa.digits(code.take(3) + " " + code.drop(3)), 36, modifier = Modifier.padding(top = 2.dp))
@@ -346,7 +344,7 @@ private fun androidx.compose.foundation.layout.BoxScope.InviteSheet(store: AppSt
             ) {
                 Icon(Icons.Rounded.ContentCopy, null, Modifier.size(20.dp), tint = t.fg)
                 RowSpacer(8.dp)
-                Label("کپی کد", 15, t.fg, FontWeight.Black)
+                Label(t("کپی کد", "Copy code"), 15, t.fg, FontWeight.Black)
             }
             Row(
                 Modifier.weight(1f).height(56.dp).clip(RoundedCornerShape(28.dp)).background(t.acc).pressTap(.95f, store::shareInvite),
@@ -354,7 +352,7 @@ private fun androidx.compose.foundation.layout.BoxScope.InviteSheet(store: AppSt
             ) {
                 Icon(Icons.Rounded.Share, null, Modifier.size(20.dp), tint = t.onAcc)
                 RowSpacer(8.dp)
-                Label("اشتراک لینک", 15, t.onAcc, FontWeight.Black)
+                Label(t("فرستادن لینک", "Send link"), 15, t.onAcc, FontWeight.Black)
             }
         }
         Column(
@@ -367,8 +365,8 @@ private fun androidx.compose.foundation.layout.BoxScope.InviteSheet(store: AppSt
                 .padding(14.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Label("انقضای کد", 14, t.fg, modifier = Modifier.weight(1f))
-                Label("مدیر", 11, t.acc)
+                Label(t("اعتبار کد", "Code validity"), 14, t.fg, modifier = Modifier.weight(1f))
+                Label(t("مدیر", "Admin"), 11, t.acc)
             }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf("24h", "7d", "30d", "never").forEach { e ->
@@ -383,8 +381,8 @@ private fun androidx.compose.foundation.layout.BoxScope.InviteSheet(store: AppSt
             Row(Modifier.fillMaxWidth().tap(store::resetCode).padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.Autorenew, null, Modifier.size(22.dp), tint = Color(0xFFFF8A5C))
                 RowSpacer(10.dp)
-                Label("کد جدید بساز", 14, t.fg, modifier = Modifier.weight(1f))
-                Label("کد قبلی باطل می‌شه", 12, t.sub, FontWeight.Bold)
+                Label(t("کد جدید", "New code"), 14, t.fg, modifier = Modifier.weight(1f))
+                Label(t("کد قبلی دیگه کار نمی‌کنه", "Old code won't work anymore"), 12, t.sub, FontWeight.Bold)
             }
         }
     }

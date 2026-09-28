@@ -6,10 +6,10 @@ import assert from "node:assert/strict";
 const BASE = process.env.BASE ?? "http://127.0.0.1:8787";
 let passed = 0;
 
-async function call(method, path, token, body) {
+async function call(method, path, token, body, extraHeaders = {}) {
   const res = await fetch(BASE + path, {
     method,
-    headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}), ...extraHeaders },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const data = await res.json();
@@ -104,20 +104,22 @@ await test("ghost mode and pauses hide status and history", async () => {
   assert.equal(friend(await ok("GET", "/v1/feed", C.token), A.id).status.key, "spicy");
 });
 
-await test("distance follows share level and precision", async () => {
-  await ok("PATCH", "/v1/me", A.token, { lat: 35.7000, lng: 51.4000 });
-  await ok("PATCH", "/v1/me", C.token, { lat: 35.7200, lng: 51.4000 });
-  let a = friend(await ok("GET", "/v1/feed", C.token), A.id);
-  assert.equal(a.distanceKm, 2, "approx rounds to 0.5 km");
-  await ok("PATCH", `/v1/groups/${group.id}/me`, A.token, { share: "status" });
-  a = friend(await ok("GET", "/v1/feed", C.token), A.id);
-  assert.equal(a.distanceKm, null);
-  await ok("PATCH", `/v1/groups/${group.id}/me`, A.token, { share: "exact" });
-  await ok("PATCH", "/v1/me", A.token, { precision: "exact" });
-  a = friend(await ok("GET", "/v1/feed", C.token), A.id);
-  assert.equal(a.distanceKm, 2.2);
-  await ok("PATCH", "/v1/me", A.token, { precision: "off" });
-  assert.equal(friend(await ok("GET", "/v1/feed", C.token), A.id).distanceKm, null);
+await test("location payloads are rejected and feeds contain no location fields", async () => {
+  const legacy = [
+    ["PATCH", "/v1/me", { lat: 35.7, lng: 51.4 }],
+    ["PATCH", "/v1/me", { precision: "exact" }],
+    ["POST", "/v1/status", { key: "gym", text: "روز پا", lat: 35.7 }],
+  ];
+  for (const [method, path, body] of legacy) {
+    const response = await call(method, path, A.token, body);
+    assert.equal(response.status, 400, `${method} ${path}`);
+    assert.equal(response.data.error, "location_disabled");
+  }
+  const feed = await ok("GET", "/v1/feed", C.token);
+  const serialized = JSON.stringify(feed);
+  for (const field of ["lat", "lng", "precision", "share", "distanceKm"]) {
+    assert.ok(!serialized.includes(`"${field}"`), `${field} leaked into feed`);
+  }
 });
 
 await test("reactions show up for the receiver", async () => {
@@ -166,6 +168,55 @@ await test("clear history keeps the current status", async () => {
   await ok("POST", "/v1/status", B.token, { key: "work", text: "جلسه" });
   await ok("DELETE", "/v1/history", B.token);
   assert.equal((await ok("GET", "/v1/feed", B.token)).me.status.key, "work");
+});
+
+await test("expired status reverts to previous non-expired one", async () => {
+  const t = Date.now();
+  await call("POST", "/v1/status", B.token, { key: "free", text: "اولیه" }, { "X-Test-Now": `${t + 1000}` });
+  await call("POST", "/v1/status", B.token, { key: "dnd", text: "کوتاه", expiresInMin: 1 }, { "X-Test-Now": `${t + 2000}` });
+  
+  let feed = (await call("GET", "/v1/feed", B.token, undefined, { "X-Test-Now": `${t + 3000}` })).data;
+  assert.equal(feed.me.status.key, "dnd");
+
+  feed = (await call("GET", "/v1/feed", B.token, undefined, { "X-Test-Now": `${t + 70000}` })).data;
+  assert.equal(feed.me.status.key, "free");
+});
+
+await test("rate limits return 429", async () => {
+  // We use a unique IP so it doesn't affect other tests.
+  const ip = "1.2.3.4";
+  let lastStatus = 200;
+  for (let i = 0; i < 22; i++) {
+    const res = await call("POST", "/v1/register", null, { nick: "spam", avatar: 1 }, { "CF-Connecting-IP": ip });
+    lastStatus = res.status;
+  }
+  assert.equal(lastStatus, 429);
+});
+
+await test("recovery code flow: create, recover, old token revoked", async () => {
+  // A was deleted earlier in the test suite, so register a fresh user.
+  const D = await ok("POST", "/v1/register", null, { nick: "دارا", avatar: 2 });
+  // Create a recovery code
+  const rec = await ok("POST", "/v1/me/recovery", D.token, {});
+  assert.equal(rec.code.length, 14, "code with dashes is 14 chars");
+  assert.match(rec.code, /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+  // Recover with the code → new token works
+  const res = await call("POST", "/v1/recover", null, { code: rec.code });
+  assert.equal(res.status, 200);
+  const newToken = res.data.token;
+  assert.equal(res.data.id, D.id);
+  await ok("GET", "/v1/feed", newToken);
+  // Old token is revoked
+  assert.equal((await call("GET", "/v1/feed", D.token)).status, 401);
+  // Wrong code → 404
+  assert.equal((await call("POST", "/v1/recover", null, { code: "XXXX-XXXX-XXXX" })).status, 404);
+  // 11th attempt on same IP → 429
+  const ip = "5.6.7.8";
+  for (let i = 0; i < 10; i++) {
+    await call("POST", "/v1/recover", null, { code: "AAAA-BBBB-CCCC" }, { "CF-Connecting-IP": ip });
+  }
+  const r11 = await call("POST", "/v1/recover", null, { code: "AAAA-BBBB-CCCC" }, { "CF-Connecting-IP": ip });
+  assert.equal(r11.status, 429);
 });
 
 console.log(`\n${passed} passed`);

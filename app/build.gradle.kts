@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -31,6 +33,20 @@ val firebase: Map<String, String> = run {
     )
 }
 
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val releaseStore: String? = localProps.getProperty("fsl.release.store")
+    ?: project.findProperty("fsl.release.store") as String?
+    ?: System.getenv("FSL_RELEASE_STORE")
+val releasePassword: String? = localProps.getProperty("fsl.release.password")
+    ?: project.findProperty("fsl.release.password") as String?
+    ?: System.getenv("FSL_RELEASE_PASSWORD")
+val releaseAlias: String? = localProps.getProperty("fsl.release.alias")
+    ?: project.findProperty("fsl.release.alias") as String?
+    ?: System.getenv("FSL_RELEASE_ALIAS")
+
 android {
     namespace = "com.sinapticc.friendsstatus"
     compileSdk = 35
@@ -39,8 +55,8 @@ android {
         applicationId = "com.sinapticc.friendsstatus"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.2.0"
+        versionCode = 8
+        versionName = "1.1.2"
 
         buildConfigField("String", "API_URL", "\"${setting("FSL_API_URL")}\"")
         buildConfigField("String", "FIREBASE_APP_ID", "\"${firebase["appId"] ?: ""}\"")
@@ -54,9 +70,16 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Signed with the debug key so the release APK installs for testing.
-            // Replace with a real signing config before publishing.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (releaseStore != null && releasePassword != null && releaseAlias != null) {
+                signingConfigs.create("release") {
+                    storeFile = file(releaseStore)
+                    storePassword = releasePassword
+                    keyAlias = releaseAlias
+                    keyPassword = releasePassword
+                }
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
     compileOptions {
@@ -89,5 +112,6 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.firebase.messaging)
+    implementation("androidx.fragment:fragment-ktx:1.8.0")
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

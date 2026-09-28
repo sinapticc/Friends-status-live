@@ -10,4 +10,6 @@
     android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:updatePeriodMillis="0"
+    android:configure="com.sinapticc.friendsstatus.android.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional"
     android:widgetCategory="home_screen" />

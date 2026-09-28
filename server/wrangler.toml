@@ -6,7 +6,7 @@ compatibility_date = "2025-09-01"
 binding = "DB"
 database_name = "fsl"
 # Filled in by the deploy workflow (it creates the database on first run).
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "a0760c45-bd97-4efa-8d09-a9054bb58e46"
 migrations_dir = "migrations"
 
 # Secret, set by the deploy workflow when present:

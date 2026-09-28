@@ -18,10 +18,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.BlurOn
-import androidx.compose.material.icons.rounded.LocationOff
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.SentimentVerySatisfied
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.TouchApp
@@ -49,9 +47,8 @@ import androidx.compose.ui.unit.dp
 import com.sinapticc.friendsstatus.data.AppStore
 import com.sinapticc.friendsstatus.model.Catalog
 import com.sinapticc.friendsstatus.model.Fa
-import com.sinapticc.friendsstatus.model.Precision
 import com.sinapticc.friendsstatus.model.Screen
-import com.sinapticc.friendsstatus.model.ShareLevel
+import com.sinapticc.friendsstatus.model.t
 import com.sinapticc.friendsstatus.ui.NavHeight
 import com.sinapticc.friendsstatus.ui.components.Card
 import com.sinapticc.friendsstatus.ui.components.IconCircle
@@ -61,7 +58,6 @@ import com.sinapticc.friendsstatus.ui.components.Label
 import com.sinapticc.friendsstatus.ui.components.LiveDot
 import com.sinapticc.friendsstatus.ui.components.RowSpacer
 import com.sinapticc.friendsstatus.ui.components.SectionHeader
-import com.sinapticc.friendsstatus.ui.components.Segmented
 import com.sinapticc.friendsstatus.ui.components.StatusChar
 import com.sinapticc.friendsstatus.ui.components.Title
 import com.sinapticc.friendsstatus.ui.components.Toggle
@@ -93,15 +89,15 @@ fun FriendScreen(store: AppStore) {
         )
     }) {
         TopBar(
-            start = { IconCircle(Icons.Rounded.ArrowForward, "برگشت", iconSize = 24.dp, onClick = store::back) },
+            start = { IconCircle(if (com.sinapticc.friendsstatus.model.L10n.isFa) Icons.Rounded.ArrowForward else Icons.Rounded.ArrowBack, t("برگشت", "Back"), iconSize = 24.dp, onClick = store::back) },
             middle = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     LiveDot(7.dp, t.live)
                     RowSpacer(6.dp)
-                    Label("زنده · ${Fa.ago(f.minutesAgo)}", 12, t.sub)
+                    Label(t("زنده · ${Fa.ago(f.minutesAgo)}", "Live · ${Fa.ago(f.minutesAgo)}"), 12, t.sub)
                 }
             },
-            end = { IconCircle(Icons.Rounded.MoreVert, "بیشتر", iconSize = 24.dp) },
+            end = { IconCircle(Icons.Rounded.MoreVert, t("بیشتر", "More"), iconSize = 24.dp) },
         )
         Column(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             StatusChar(f.status, Modifier.size(210.dp), idle = true, bounceKey = bump.takeIf { it > 0 })
@@ -110,15 +106,12 @@ fun FriendScreen(store: AppStore) {
                 RowSpacer(10.dp)
                 Title(f.name, 34)
             }
-            Label("«${f.text}»", 21, t.fg, modifier = Modifier.padding(top = 8.dp).widthIn(max = 300.dp))
-            Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (f.place.isNotEmpty()) InfoPill(f.place, icon = placeIcon(f.place), iconTint = t.vio, fontSize = 13, fg = t.fg)
-                if (f.distance.isNotEmpty()) InfoPill(f.distance, fontSize = 13, fg = t.fg)
-            }
+            val dt = Catalog.displayText(f.status, f.text)
+            Label(t("«${dt}»", "\"${dt}\""), 21, t.fg, modifier = Modifier.padding(top = 8.dp).widthIn(max = 300.dp))
         }
         Row(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ReactButton(Icons.Rounded.TouchApp, "سقلمه", t.vio, Modifier.weight(1f)) { react("poke") }
-            ReactButton(Icons.Rounded.SentimentVerySatisfied, "خنده", Color(0xFFFFB13D), Modifier.weight(1f)) { react("laugh") }
+            ReactButton(Icons.Rounded.TouchApp, t("سقلمه", "Poke"), t.vio, Modifier.weight(1f)) { react("poke") }
+            ReactButton(Icons.Rounded.SentimentVerySatisfied, t("خنده", "Laugh"), Color(0xFFFFB13D), Modifier.weight(1f)) { react("laugh") }
             val shape = RoundedCornerShape(26.dp)
             Row(
                 Modifier
@@ -133,11 +126,11 @@ fun FriendScreen(store: AppStore) {
             ) {
                 Icon(Icons.Rounded.WavingHand, null, Modifier.size(26.dp), tint = t.onAcc)
                 RowSpacer(8.dp)
-                Label("بیا بیرون؟", 16, t.onAcc, FontWeight.Black)
+                Label(t("بیا بیرون؟", "Wanna hang?"), 16, t.onAcc, FontWeight.Black)
             }
         }
-        val hist = listOf(Triple(f.status, f.text, "الان")) + f.history.map { Triple(it.key, it.text, Fa.digits(it.time)) }
-        SectionHeader("امروز", "${Fa.num(hist.size)} به‌روزرسانی")
+        val hist = listOf(Triple(f.status, Catalog.displayText(f.status, f.text), t("الان", "now"))) + f.history.map { Triple(it.key, Catalog.displayText(it.key, it.text), Fa.digits(it.time)) }
+        SectionHeader(t("امروز", "Today"), t("${Fa.num(hist.size)} به‌روزرسانی", "${Fa.num(hist.size)} updates"))
         Box(Modifier.padding(start = 4.dp)) {
             Box(Modifier.padding(start = 27.dp, top = 20.dp, bottom = 20.dp).width(2.dp).height(((hist.size - 1) * 68).dp).background(t.line))
             Column {
@@ -201,11 +194,11 @@ fun PrivacyScreen(store: AppStore) {
             RowSpacer(14.dp)
             Column(Modifier.weight(1f)) {
                 Title(s.nick, 24)
-                Label("${Fa.num(s.realGroups.size)} گروه · ${Fa.num(s.friends.size)} رفیق", 13, t.sub, FontWeight.Bold)
+                Label(t("${Fa.num(s.realGroups.size)} گروه · ${Fa.num(s.friends.size)} رفیق", "${Fa.num(s.realGroups.size)} groups · ${Fa.num(s.friends.size)} friends"), 13, t.sub, FontWeight.Bold)
             }
-            IconCircle(Icons.Rounded.Settings, "تنظیمات", onClick = { store.tab(Screen.Profile) })
+            IconCircle(Icons.Rounded.Settings, t("تنظیمات", "Settings"), onClick = { store.tab(Screen.Profile) })
         }
-        Title("حریم خصوصی", 28, modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 22.dp, bottom = 10.dp))
+        Title(t("حریم خصوصی", "Privacy"), 28, modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 22.dp, bottom = 10.dp))
 
         // Ghost mode
         val on = s.ghost
@@ -227,80 +220,16 @@ fun PrivacyScreen(store: AppStore) {
             }
             RowSpacer(14.dp)
             Column(Modifier.weight(1f)) {
-                Title("حالت روح", 18, fg)
-                Label(if (on) "نامرئی شدی. رفقا آخرین وضعیتت رو «غیب‌شده» می‌بینن." else "وضعیت و مکانت رو یه‌جا از همه مخفی کن.", 13, fg.copy(alpha = .75f), FontWeight.Bold)
+                Title(t("حالت روح", "Ghost mode"), 18, fg)
+                Label(if (on) t("غیب شدی. رفقا می‌بینن «غیب شده».", "You're invisible. Friends see \"away\".") else t("وضعیتت رو از همه قایم کن.", "Hide your status from everyone."), 13, fg.copy(alpha = .75f), FontWeight.Bold)
             }
             RowSpacer(8.dp)
             Toggle(on)
         }
 
-        // Location precision
-        Card(Modifier.fillMaxWidth().padding(top = 14.dp), radius = 30.dp, padding = 16.dp) {
-            Column {
-                Label("دقت مکان", 15, t.fg)
-                Segmented(
-                    listOf(Precision.Exact, Precision.Approx, Precision.Off), s.precision, store::setPrecision,
-                    Modifier.padding(top = 12.dp),
-                ) { p, c ->
-                    val (icon, label) = when (p) {
-                        Precision.Exact -> Icons.Rounded.MyLocation to "دقیق"
-                        Precision.Approx -> Icons.Rounded.BlurOn to "تقریبی"
-                        Precision.Off -> Icons.Rounded.LocationOff to "خاموش"
-                    }
-                    Icon(icon, null, Modifier.size(18.dp), tint = c)
-                    RowSpacer(4.dp)
-                    Label(label, 13, c, FontWeight.Black)
-                }
-                Label(
-                    when (s.precision) {
-                        Precision.Exact -> "رفقا اسم دقیق جایی که هستی رو می‌بینن."
-                        Precision.Approx -> "رفقا یه برچسب مثل «دانشگاه» یا «۲٫۳ کیلومتر» می‌بینن. جات حدود ۵۰۰ متر جابه‌جا نشون داده می‌شه."
-                        Precision.Off -> "فقط وضعیتت فرستاده می‌شه. نه مکان، نه فاصله."
-                    },
-                    13, t.sub, FontWeight.Bold, Modifier.padding(top = 12.dp),
-                )
-            }
-        }
-
-        SectionHeader("برای هر گروه", "برای تغییر بزن")
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            s.realGroups.forEach { g ->
-                val k = g.id
-                val lv = g.share
-                val chars = g.members.mapNotNull { m -> s.friends.firstOrNull { it.id == m.id }?.status }.take(2).let { it + List(2 - it.size) { "custom" } }
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(t.card)
-                        .border(1.dp, t.line, RoundedCornerShape(24.dp))
-                        .tap { store.cycleGroupLevel(k) }
-                        .padding(start = 14.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Row(Modifier.padding(start = 10.dp)) {
-                        StatusChar(chars[0], Modifier.offset(x = (-10).dp).size(36.dp))
-                        StatusChar(chars[1], Modifier.offset(x = (-22).dp).size(36.dp))
-                    }
-                    Column(Modifier.weight(1f)) {
-                        Label(g.name, 15, t.fg, maxLines = 1)
-                        Label("${Fa.num(g.members.size - 1)} رفیق", 12, t.sub, FontWeight.Bold)
-                    }
-                    val (lbg, lfg, text) = when (lv) {
-                        ShareLevel.Exact -> Triple(t.selectedBg, t.adminFg, "دقیق")
-                        ShareLevel.Approx -> Triple(if (t.dark) Color(0x2EB39DFF) else Color(0xFFE8E0FF), t.vio, "تقریبی")
-                        ShareLevel.StatusOnly -> Triple(t.tonal, t.sub, "فقط وضعیت")
-                    }
-                    Box(Modifier.clip(RoundedCornerShape(14.dp)).background(lbg).padding(horizontal = 12.dp, vertical = 7.dp)) {
-                        Label(text, 12, lfg, FontWeight.Black)
-                    }
-                }
-            }
-        }
-
         Row(Modifier.padding(top = 18.dp, start = 4.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Label("توقف اشتراک", 13, t.sub)
-            listOf("۱ ساعت", "امشب", "آخر هفته").forEach { p ->
+            Label(t("یه مدت نشون نده", "Hide for a while"), 13, t.sub)
+            listOf(t("۱ ساعت", "1 hour"), t("امشب", "Tonight"), t("آخر هفته", "Weekend")).forEach { p ->
                 val on2 = s.pausedFor == p
                 Box(
                     Modifier
@@ -313,20 +242,24 @@ fun PrivacyScreen(store: AppStore) {
             }
         }
         Column(Modifier.padding(top = 22.dp, start = 6.dp, end = 6.dp)) {
-            Label("پاک کردن تاریخچه‌ی وضعیت‌هام", 14, t.vio, modifier = Modifier.tap(store::clearHistory).padding(vertical = 7.dp))
-            Label("ترک همه‌ی گروه‌ها و حذف داده‌ها", 14, Danger, modifier = Modifier.tap { confirmDelete = true }.padding(vertical = 7.dp))
+            Label(t("پاک کردن تاریخچه", "Clear history"), 14, t.vio, modifier = Modifier.tap(store::clearHistory).padding(vertical = 7.dp))
+            Label(t("کد بازیابی حساب", "Account recovery code"), 14, t.acc, modifier = Modifier.tap {
+                store.showRecoveryCode()
+                store.go(Screen.RecoveryCode)
+            }.padding(vertical = 7.dp))
+            Label(t("حذف حساب", "Delete account"), 14, Danger, modifier = Modifier.tap { confirmDelete = true }.padding(vertical = 7.dp))
         }
     }
     PopDialog(confirmDelete, { confirmDelete = false }) {
         StatusChar("crying", Modifier.size(90.dp), idle = true)
-        Title("همه‌چی پاک بشه؟", 22, modifier = Modifier.padding(top = 8.dp))
-        Label("از همه‌ی گروه‌ها بیرون میای و وضعیت‌ها و حسابت برای همیشه پاک می‌شه.", 14, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp))
+        Title(t("همه‌چی پاک بشه؟", "Delete everything?"), 22, modifier = Modifier.padding(top = 8.dp))
+        Label(t("از همه‌ی گروه‌ها میای بیرون و حسابت برای همیشه پاک می‌شه.", "You'll leave all groups and your account will be permanently deleted."), 14, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp))
         Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(26.dp)).background(t.tonal).tap { confirmDelete = false }, contentAlignment = Alignment.Center) {
-                Label("نه", 15, t.fg, FontWeight.Black)
+                Label(t("نه", "No"), 15, t.fg, FontWeight.Black)
             }
             Box(Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(26.dp)).background(Danger).tap { confirmDelete = false; store.deleteEverything() }, contentAlignment = Alignment.Center) {
-                Label("پاک کن", 15, Color.White, FontWeight.Black)
+                Label(t("پاک کن", "Delete"), 15, Color.White, FontWeight.Black)
             }
         }
     }

@@ -1,17 +1,13 @@
 package com.sinapticc.friendsstatus
 
-import android.Manifest
 import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.annotation.SuppressLint
-import android.location.LocationManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -30,7 +26,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
@@ -60,17 +55,11 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
     private val vm: AppViewModel by viewModels()
     private var onPhoto: ((ImageBitmap) -> Unit)? = null
-    private var onLocation: ((Boolean) -> Unit)? = null
 
     private val photoPicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         val cb = onPhoto
         onPhoto = null
         if (uri != null && cb != null) decodeScaled(uri)?.let { cb(it.asImageBitmap()) }
-    }
-
-    private val locationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        onLocation?.invoke(granted)
-        onLocation = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,6 +68,7 @@ class MainActivity : ComponentActivity() {
         vm.platform.activity = this
         val store = vm.store
         Sync.schedule(this)
+        com.sinapticc.friendsstatus.model.L10n.isFa = com.sinapticc.friendsstatus.model.L10n.resolve(vm.platform.getLanguagePref(), java.util.Locale.getDefault().language)
         setContent {
             val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             val bottom = WindowInsets.navigationBars.union(WindowInsets.ime).asPaddingValues().calculateBottomPadding()
@@ -88,6 +78,38 @@ class MainActivity : ComponentActivity() {
                     AppRoot(store)
                 }
             }
+        }
+        handleIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent == null) return
+        val friendId = intent.getStringExtra("fsl_friend")
+        val openPicker = intent.getStringExtra("fsl_open")
+        android.util.Log.d("FSL_TAP", "handleIntent: action=${intent.action} data=${intent.data} friendId=$friendId openPicker=$openPicker extras=${intent.extras?.keySet()?.joinToString { "$it=${intent.extras?.get(it)}" }}")
+
+        if (friendId != null) {
+            intent.removeExtra("fsl_friend")
+            vm.viewModelScope.launch {
+                var tries = 0
+                while (vm.store.state.friends.none { it.id == friendId } && tries < 20) {
+                    kotlinx.coroutines.delay(200)
+                    tries++
+                }
+                val found = vm.store.state.friends.any { it.id == friendId }
+                if (found) {
+                    vm.store.openFriend(friendId)
+                }
+            }
+        } else if (openPicker == "picker") {
+            intent.removeExtra("fsl_open")
+            vm.store.openSheet()
         }
     }
 
@@ -109,15 +131,6 @@ class MainActivity : ComponentActivity() {
     fun pickPhoto(cb: (ImageBitmap) -> Unit) {
         onPhoto = cb
         photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-    }
-
-    fun requestLocation(cb: (Boolean) -> Unit) {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            cb(true)
-        } else {
-            onLocation = cb
-            locationPermission.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
-        }
     }
 
     /** Decodes a picked photo at most ~1600px on its long side to keep memory in check. */
@@ -178,11 +191,6 @@ class AndroidPlatform(private val app: Application) : Platform {
         activity?.pickPhoto(onPicked)
     }
 
-    override fun requestLocation(onResult: (Boolean) -> Unit) {
-        val a = activity
-        if (a == null) onResult(false) else a.requestLocation(onResult)
-    }
-
     private val photoFile get() = File(app.filesDir, "profile.png")
 
     override fun savePhoto(image: ImageBitmap?) {
@@ -198,15 +206,6 @@ class AndroidPlatform(private val app: Application) : Platform {
 
     override fun clock(): String = SimpleDateFormat("HH:mm", Locale.US).format(Date())
 
-    @SuppressLint("MissingPermission")
-    override fun lastLocation(): Pair<Double, Double>? {
-        val granted = ContextCompat.checkSelfPermission(app, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        if (!granted) return null
-        val lm = app.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val best = lm.getProviders(true).mapNotNull { runCatching { lm.getLastKnownLocation(it) }.getOrNull() }.maxByOrNull { it.time }
-        return best?.let { it.latitude to it.longitude }
-    }
-
     override fun onFeed(feed: FeedDto) {
         io.launch {
             WidgetData.save(app, feed)
@@ -221,5 +220,16 @@ class AndroidPlatform(private val app: Application) : Platform {
         sp.edit().clear().apply()
         WorkManager.getInstance(app).cancelAllWork()
         io.launch { runCatching { FslWidget.refreshAll(app) } }
+    }
+
+    override fun getLanguagePref(): String = prefs.get("lang") ?: "auto"
+
+    override fun setLanguagePref(v: String) {
+        prefs.put("lang", v)
+    }
+
+    override fun onLanguageChanged() {
+        io.launch { runCatching { FslWidget.refreshAll(app) } }
+        activity?.recreate()
     }
 }

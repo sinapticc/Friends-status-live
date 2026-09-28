@@ -24,18 +24,18 @@ import java.util.concurrent.TimeUnit
 @Serializable data class StatusDto(val key: String, val text: String, val hue: Int = 0, val acc: String = "none", val at: Long, val expiresAt: Long? = null)
 @Serializable data class MeDto(
     val id: String, val nick: String, val avatar: Int, val look: String? = null, val pairCode: String,
-    val ghost: Boolean, val pausedUntil: Long? = null, val precision: String, val status: StatusDto? = null,
+    val ghost: Boolean, val pausedUntil: Long? = null, val status: StatusDto? = null,
 )
 @Serializable data class MemberDto(val id: String, val nick: String, val avatar: Int, val role: String, val joinedAt: Long)
 @Serializable data class GroupDto(
     val id: String, val kind: String, val name: String, val icon: String, val color: Int, val createdAt: Long,
-    val role: String, val share: String, val muted: Boolean, val code: String? = null, val codeTtl: String,
+    val role: String, val code: String? = null, val codeTtl: String,
     val codeExpiresAt: Long? = null, val members: List<MemberDto>,
 )
 @Serializable data class HistoryDto(val key: String, val text: String, val at: Long)
 @Serializable data class FriendDto(
     val id: String, val nick: String, val avatar: Int, val look: String? = null, val groups: List<String>,
-    val status: StatusDto? = null, val distanceKm: Double? = null, val history: List<HistoryDto>,
+    val status: StatusDto? = null, val history: List<HistoryDto>,
 )
 @Serializable data class ReactionDto(val kind: String, val at: Long, val nick: String)
 @Serializable data class FeedDto(val serverTime: Long, val me: MeDto, val groups: List<GroupDto>, val friends: List<FriendDto>, val reactions: List<ReactionDto> = emptyList())
@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit
 @Serializable data class JoinRes(val id: String, val kind: String, val name: String)
 @Serializable data class CreateGroupRes(val id: String, val code: String)
 @Serializable data class CodeRes(val code: String)
+@Serializable data class RecoverRes(val id: String, val token: String, val pairCode: String)
 @Serializable private data class Ok(val ok: Boolean = true)
 
 class ApiException(val status: Int, val code: String) : Exception("$status $code")
@@ -94,13 +95,13 @@ class Api(private val baseUrl: String, private val token: () -> String?) {
 
     suspend fun postStatus(
         key: String, text: String, hue: Int, acc: String, visibility: String, visGroups: List<String>,
-        expiresInMin: Int?, lat: Double?, lng: Double?,
+        expiresInMin: Int?,
     ) {
         call(
             "POST", "/v1/status",
             jsonOf(
                 "key" to key, "text" to text, "hue" to hue, "acc" to acc, "visibility" to visibility,
-                "visGroups" to visGroups, "expiresInMin" to expiresInMin, "lat" to lat, "lng" to lng,
+                "visGroups" to visGroups, "expiresInMin" to expiresInMin,
             ),
             Ok.serializer(),
         )
@@ -125,4 +126,8 @@ class Api(private val baseUrl: String, private val token: () -> String?) {
     suspend fun setRole(id: String, userId: String, admin: Boolean) { call("POST", "/v1/groups/$id/members/$userId/role", jsonOf("admin" to admin), Ok.serializer()) }
 
     suspend fun removeMember(id: String, userId: String) { call("DELETE", "/v1/groups/$id/members/$userId", null, Ok.serializer()) }
+
+    suspend fun createRecovery() = call("POST", "/v1/me/recovery", null, CodeRes.serializer())
+
+    suspend fun recover(code: String) = call("POST", "/v1/recover", jsonOf("code" to code), RecoverRes.serializer())
 }

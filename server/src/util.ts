@@ -11,7 +11,13 @@ export function json(data: unknown, status = 200): Response {
   });
 }
 
-export const now = () => Date.now();
+export const now = (req?: Request, env?: any) => {
+  if (env?.FSL_TEST_CLOCK === "1" && req) {
+    const h = req.headers.get("X-Test-Now");
+    if (h) return Number(h);
+  }
+  return Date.now();
+};
 
 export function uuid(): string {
   return crypto.randomUUID();
@@ -34,16 +40,8 @@ export const inviteCode = () => randomFrom("0123456789", 6);
 /** Personal 1-on-1 code; no 0/O/1/I so it can be read out loud. */
 export const pairCode = () => randomFrom("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 7);
 export const secretToken = () => randomFrom("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 40);
-
-/** Great-circle distance in kilometers. */
-export function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
-  const r = 6371;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(bLat - aLat);
-  const dLng = toRad(bLng - aLng);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
-  return 2 * r * Math.asin(Math.sqrt(h));
-}
+/** Recovery code: 12 chars, formatted XXXX-XXXX-XXXX. */
+export const recoveryCode = () => randomFrom("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 12);
 
 export function str(v: unknown, max: number, field: string): string {
   if (typeof v !== "string") throw new HttpError(400, `bad_${field}`);
@@ -62,7 +60,15 @@ export function oneOf<T extends string>(v: unknown, options: readonly T[], field
   return v as T;
 }
 
-export function coord(v: unknown, limit: number, field: string): number {
-  if (typeof v !== "number" || !Number.isFinite(v) || Math.abs(v) > limit) throw new HttpError(400, `bad_${field}`);
-  return v;
+export async function rateLimit(db: D1Database, key: string, limit: number, windowMs: number) {
+  const windowStart = Math.floor(Date.now() / windowMs) * windowMs;
+  const q = await db.prepare(`
+    INSERT INTO rate_limits (k, window_start, n)
+    VALUES (?, ?, 1)
+    ON CONFLICT(k) DO UPDATE SET
+      n = CASE WHEN window_start = excluded.window_start THEN rate_limits.n + 1 ELSE 1 END,
+      window_start = excluded.window_start
+    RETURNING n
+  `).bind(key, windowStart).first<{ n: number }>();
+  if (q && q.n > limit) throw new HttpError(429, "rate_limited");
 }

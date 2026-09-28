@@ -1,0 +1,1 @@
+Generated for Friends Status Live with the built-in OpenAI imagegen tool on 2026-09-25. The owner requested replacement character art. Original prompts and mappings are recorded in docs/CHARACTER-ART.md. PNG masters in this folder are source assets; optimized WebP copies go to app/src/main/res/drawable-nodpi/.

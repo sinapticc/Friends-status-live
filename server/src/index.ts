@@ -1,11 +1,15 @@
 import { sendData } from "./fcm";
 import {
-  HttpError, coord, distanceKm, int, inviteCode, json, now, oneOf, pairCode, secretToken, sha256, str, uuid,
+  HttpError, int, inviteCode, json, now, oneOf, pairCode, recoveryCode, secretToken, sha256, str, uuid, rateLimit,
 } from "./util";
 
 export interface Env {
   DB: D1Database;
   FCM_SERVICE_ACCOUNT?: string;
+  /** Test-only: "1" lets requests override the clock with X-Test-Now. Never set in production. */
+  FSL_TEST_CLOCK?: string;
+  RL_REGISTER?: string;
+  RL_CODE?: string;
 }
 
 // Keep in sync with Catalog.statuses in the app.
@@ -18,25 +22,24 @@ const STATUS_KEYS = [
 ] as const;
 const SENSITIVE = new Set(["period", "period2", "period3", "spicy", "spicy2", "spicy3"]);
 const ACCS = ["none", "cap", "bow", "crown"] as const;
-const SHARE_ORDER = ["status", "approx", "exact"] as const;
 const CODE_TTLS: Record<string, number | null> = { "24h": 86_400_000, "7d": 7 * 86_400_000, "30d": 30 * 86_400_000, never: null };
 const DAY = 86_400_000;
 
 interface UserRow {
   id: string; nick: string; avatar: number; look: string | null; pair_code: string; fcm_token: string | null;
-  ghost: number; paused_until: number | null; precision: string; lat: number | null; lng: number | null;
+  ghost: number; paused_until: number | null;
 }
 interface GroupRow {
   id: string; name: string; icon: string; color: number; kind: string; invite_code: string | null;
   code_expires_at: number | null; code_ttl: string; created_at: number;
 }
-interface MemberRow { group_id: string; user_id: string; role: string; share: string; muted: number; joined_at: number }
+interface MemberRow { group_id: string; user_id: string; role: string; joined_at: number }
 interface StatusRow {
   id: number; user_id: string; key: string; text: string; hue: number; acc: string; sensitive: number;
-  visibility: string; vis_groups: string | null; lat: number | null; lng: number | null; created_at: number; expires_at: number | null;
+  visibility: string; vis_groups: string | null; created_at: number; expires_at: number | null;
 }
 
-type Ctx = { env: Env; exec: ExecutionContext; me: UserRow; body: any; url: URL };
+export type Ctx = { env: Env; req: Request; exec: ExecutionContext; me: UserRow; body: any; url: URL };
 
 export default {
   async fetch(req: Request, env: Env, exec: ExecutionContext): Promise<Response> {
@@ -57,10 +60,11 @@ async function route(req: Request, env: Env, exec: ExecutionContext): Promise<Re
   if (p[0] !== "v1") return p.length === 0 ? json({ ok: true, name: "fsl-api" }) : json({ error: "not_found" }, 404);
   const body = m === "GET" || m === "DELETE" ? {} : await req.json().catch(() => { throw new HttpError(400, "bad_json"); });
 
-  if (m === "POST" && p[1] === "register" && p.length === 2) return register(env, body);
+  if (m === "POST" && p[1] === "register" && p.length === 2) return register(env, req, body);
+  if (m === "POST" && p[1] === "recover" && p.length === 2) return recoverAccount(env, req, body);
 
   const me = await auth(env, req);
-  const c: Ctx = { env, exec, me, body, url };
+  const c: Ctx = { env, req, exec, me, body, url };
   const key = `${m} /${p.slice(1).map((s, i) => (i > 0 && p[1] === "groups" && (i === 1 || i === 3) ? ":" : s)).join("/")}`;
   switch (key) {
     case "GET /feed": return feed(c);
@@ -72,11 +76,12 @@ async function route(req: Request, env: Env, exec: ExecutionContext): Promise<Re
     case "POST /join": return join(c);
     case "POST /groups": return createGroup(c);
     case "PATCH /groups/:": return patchGroup(c, p[2]);
-    case "PATCH /groups/:/me": return patchMembership(c, p[2]);
+
     case "POST /groups/:/code": return resetCode(c, p[2]);
     case "POST /groups/:/leave": return leave(c, p[2]);
     case "POST /groups/:/members/:/role": return setRole(c, p[2], p[4]);
     case "DELETE /groups/:/members/:": return removeMember(c, p[2], p[4]);
+    case "POST /me/recovery": return registerRecovery(c);
   }
   if (m === "GET" && p[1] === "invite" && p.length === 3) return invitePreview(c, p[2]);
   throw new HttpError(404, "not_found");
@@ -84,7 +89,10 @@ async function route(req: Request, env: Env, exec: ExecutionContext): Promise<Re
 
 // ------------------------------------------------------------------ accounts
 
-async function register(env: Env, body: any): Promise<Response> {
+async function register(env: Env, req: Request, body: any): Promise<Response> {
+  const ip = req.headers.get("CF-Connecting-IP") ?? "local";
+  const limit = Number(env.RL_REGISTER) || 20;
+  await rateLimit(env.DB, `reg:${ip}`, limit, 3600_000);
   const nick = str(body.nick, 14, "nick");
   const avatar = int(body.avatar ?? 0, 0, 5, "avatar");
   const look = body.look == null ? null : str(body.look, 60, "look");
@@ -94,7 +102,7 @@ async function register(env: Env, body: any): Promise<Response> {
     try {
       await env.DB.prepare(
         "INSERT INTO users (id, token_hash, nick, avatar, look, pair_code, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      ).bind(id, await sha256(token), nick, avatar, look, pairCode(), now()).run();
+      ).bind(id, await sha256(token), nick, avatar, look, pairCode(), Date.now()).run();
       break;
     } catch (e) {
       if (i > 3) throw e; // pair code collision, try another
@@ -115,6 +123,7 @@ async function auth(env: Env, req: Request): Promise<UserRow> {
 
 async function patchMe(c: Ctx): Promise<Response> {
   const b = c.body;
+  if ("lat" in b || "lng" in b || "precision" in b) throw new HttpError(400, "location_disabled");
   const sets: string[] = [];
   const vals: unknown[] = [];
   const set = (col: string, v: unknown) => { sets.push(`${col} = ?`); vals.push(v); };
@@ -124,11 +133,6 @@ async function patchMe(c: Ctx): Promise<Response> {
   if ("fcmToken" in b) set("fcm_token", b.fcmToken == null ? null : str(b.fcmToken, 4096, "fcmToken"));
   if ("ghost" in b) set("ghost", b.ghost ? 1 : 0);
   if ("pausedUntil" in b) set("paused_until", b.pausedUntil == null ? null : int(b.pausedUntil, 0, Number.MAX_SAFE_INTEGER, "pausedUntil"));
-  if ("precision" in b) set("precision", oneOf(b.precision, ["exact", "approx", "off"] as const, "precision"));
-  if ("lat" in b || "lng" in b) {
-    set("lat", b.lat == null ? null : coord(b.lat, 90, "lat"));
-    set("lng", b.lng == null ? null : coord(b.lng, 180, "lng"));
-  }
   if (sets.length) await c.env.DB.prepare(`UPDATE users SET ${sets.join(", ")} WHERE id = ?`).bind(...vals, c.me.id).run();
   // Ghost mode and pauses change what friends see, so wake their widgets.
   if ("ghost" in b || "pausedUntil" in b) notifyFriends(c, "refresh");
@@ -148,6 +152,32 @@ async function deleteMe(c: Ctx): Promise<Response> {
   return json({ ok: true });
 }
 
+async function registerRecovery(c: Ctx): Promise<Response> {
+  const raw = recoveryCode();
+  const dashless = raw.replace(/-/g, "");
+  const hash = await sha256(dashless);
+  await c.env.DB.prepare("UPDATE users SET recovery_hash = ? WHERE id = ?").bind(hash, c.me.id).run();
+  const code = raw.slice(0, 4) + "-" + raw.slice(4, 8) + "-" + raw.slice(8);
+  return json({ code });
+}
+
+async function recoverAccount(env: Env, req: Request, body: any): Promise<Response> {
+  const ip = req.headers.get("CF-Connecting-IP") ?? "local";
+  await rateLimit(env.DB, `recover:${ip}`, 10, 3_600_000);
+  const persian = "۰۱۲۳۴۵۶۷۸۹";
+  let raw = typeof body.code === "string" ? body.code : "";
+  raw = [...raw].map((ch) => (persian.includes(ch) ? String(persian.indexOf(ch)) : ch)).join("").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (raw.length !== 12) throw new HttpError(400, "bad_code");
+  const hash = await sha256(raw);
+  const u = await env.DB.prepare("SELECT id FROM users WHERE recovery_hash = ?").bind(hash).first<{ id: string }>();
+  if (!u) throw new HttpError(404, "not_found");
+  const token = secretToken();
+  const newHash = await sha256(token);
+  await env.DB.prepare("UPDATE users SET token_hash = ?, recovery_hash = NULL WHERE id = ?").bind(newHash, u.id).run();
+  const row = await env.DB.prepare("SELECT pair_code FROM users WHERE id = ?").bind(u.id).first<{ pair_code: string }>();
+  return json({ id: u.id, token, pairCode: row!.pair_code });
+}
+
 async function clearHistory(c: Ctx): Promise<Response> {
   await c.env.DB.prepare(
     "DELETE FROM statuses WHERE user_id = ?1 AND id <> COALESCE((SELECT id FROM statuses WHERE user_id = ?1 ORDER BY created_at DESC LIMIT 1), -1)",
@@ -159,6 +189,7 @@ async function clearHistory(c: Ctx): Promise<Response> {
 
 async function postStatus(c: Ctx): Promise<Response> {
   const b = c.body;
+  if ("lat" in b || "lng" in b) throw new HttpError(400, "location_disabled");
   const key = oneOf(b.key, STATUS_KEYS, "key");
   const text = str(b.text, 32, "text");
   const hue = int(b.hue ?? 0, 0, 359, "hue");
@@ -172,14 +203,11 @@ async function postStatus(c: Ctx): Promise<Response> {
     visGroups = list.join(",");
   }
   const expiresIn = b.expiresInMin == null ? null : int(b.expiresInMin, 1, 1440, "expiresInMin");
-  const lat = b.lat == null ? null : coord(b.lat, 90, "lat");
-  const lng = b.lng == null ? null : coord(b.lng, 180, "lng");
-  const t = now();
+  const t = now(c.req, c.env);
   await c.env.DB.batch([
     c.env.DB.prepare(
-      "INSERT INTO statuses (user_id, key, text, hue, acc, sensitive, visibility, vis_groups, lat, lng, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    ).bind(c.me.id, key, text, hue, acc, sensitive ? 1 : 0, visibility, visGroups, lat, lng, t, expiresIn ? t + expiresIn * 60_000 : null),
-    ...(lat != null && lng != null ? [c.env.DB.prepare("UPDATE users SET lat = ?, lng = ? WHERE id = ?").bind(lat, lng, c.me.id)] : []),
+      "INSERT INTO statuses (user_id, key, text, hue, acc, sensitive, visibility, vis_groups, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    ).bind(c.me.id, key, text, hue, acc, sensitive ? 1 : 0, visibility, visGroups, t, expiresIn ? t + expiresIn * 60_000 : null),
     // Keep a week of history; older statuses are not shown anywhere.
     c.env.DB.prepare("DELETE FROM statuses WHERE user_id = ? AND created_at < ?").bind(c.me.id, t - 7 * DAY),
   ]);
@@ -194,7 +222,7 @@ async function react(c: Ctx): Promise<Response> {
     "SELECT 1 FROM members a JOIN members b ON a.group_id = b.group_id WHERE a.user_id = ? AND b.user_id = ? LIMIT 1",
   ).bind(c.me.id, to).first();
   if (!shared) throw new HttpError(403, "not_friends");
-  await c.env.DB.prepare("INSERT INTO reactions (from_id, to_id, kind, created_at) VALUES (?, ?, ?, ?)").bind(c.me.id, to, kind, now()).run();
+  await c.env.DB.prepare("INSERT INTO reactions (from_id, to_id, kind, created_at) VALUES (?, ?, ?, ?)").bind(c.me.id, to, kind, now(c.req, c.env)).run();
   const target = await c.env.DB.prepare("SELECT fcm_token FROM users WHERE id = ?").bind(to).first<{ fcm_token: string | null }>();
   if (target?.fcm_token) c.exec.waitUntil(push(c.env, [target.fcm_token], { type: "react", from: c.me.nick, kind }));
   return json({ ok: true });
@@ -225,12 +253,12 @@ async function push(env: Env, tokens: string[], data: Record<string, string>) {
 async function feed(c: Ctx): Promise<Response> {
   const db = c.env.DB;
   const me = c.me;
-  const t = now();
+  const t = now(c.req, c.env);
   const since = Number(c.url.searchParams.get("since") ?? 0) || 0;
 
   const groups = (await db.prepare(
-    "SELECT g.*, m.role, m.share, m.muted FROM members m JOIN groups g ON g.id = m.group_id WHERE m.user_id = ? ORDER BY g.created_at",
-  ).bind(me.id).all<GroupRow & { role: string; share: string; muted: number }>()).results;
+    "SELECT g.*, m.role FROM members m JOIN groups g ON g.id = m.group_id WHERE m.user_id = ? ORDER BY g.created_at",
+  ).bind(me.id).all<GroupRow & { role: string }>()).results;
   const groupIds = groups.map((g) => g.id);
   const kindOf = new Map(groups.map((g) => [g.id, g.kind]));
 
@@ -254,7 +282,6 @@ async function feed(c: Ctx): Promise<Response> {
 
   const out = friends.map((f) => {
     const shared = members.filter((m) => m.user_id === f.id).map((m) => m.group_id);
-    const theirShare = members.filter((m) => m.user_id === f.id).reduce((best, m) => Math.max(best, SHARE_ORDER.indexOf(m.share as any)), 0);
     const hidden = !!f.ghost || (f.paused_until != null && f.paused_until > t);
     const canSee = (s: StatusRow) => {
       if (!s.sensitive || s.visibility === "all") return true;
@@ -268,20 +295,11 @@ async function feed(c: Ctx): Promise<Response> {
     let status = cur ? view(cur) : null;
     if (hidden) status = { key: "dnd", text: "غیب شده", hue: 0, acc: "none", at: cur?.created_at ?? t, expiresAt: null };
 
-    // Distance only when they share location with a group I'm in and both of us have a position.
-    let distance: number | null = null;
-    const level = SHARE_ORDER[theirShare];
-    const fLat = cur?.lat ?? f.lat;
-    const fLng = cur?.lng ?? f.lng;
-    if (!hidden && f.precision !== "off" && level !== "status" && fLat != null && fLng != null && me.lat != null && me.lng != null) {
-      const d = distanceKm(me.lat, me.lng, fLat, fLng);
-      distance = level === "exact" && f.precision === "exact" ? Math.round(d * 10) / 10 : Math.max(0.5, Math.round(d * 2) / 2);
-    }
     const history = hidden ? [] : recent
       .filter((s) => s.user_id === f.id && s.id !== cur?.id && canSee(s))
       .slice(0, 8)
       .map((s) => ({ key: s.key, text: s.text, at: s.created_at }));
-    return { id: f.id, nick: f.nick, avatar: f.avatar, look: f.look, groups: shared, status, distanceKm: distance, history };
+    return { id: f.id, nick: f.nick, avatar: f.avatar, look: f.look, groups: shared, status, history };
   });
 
   const byGroup = (gid: string) => members.filter((m) => m.group_id === gid);
@@ -296,7 +314,7 @@ async function feed(c: Ctx): Promise<Response> {
     serverTime: t,
     me: {
       id: me.id, nick: me.nick, avatar: me.avatar, look: me.look, pairCode: me.pair_code,
-      ghost: !!me.ghost, pausedUntil: me.paused_until, precision: me.precision,
+      ghost: !!me.ghost, pausedUntil: me.paused_until,
       status: myStatus ? { key: myStatus.key, text: myStatus.text, hue: myStatus.hue, acc: myStatus.acc, at: myStatus.created_at, expiresAt: myStatus.expires_at } : null,
     },
     groups: groups.map((g) => {
@@ -305,7 +323,7 @@ async function feed(c: Ctx): Promise<Response> {
       const admin = g.role === "admin";
       return {
         id: g.id, kind: g.kind, name: other ? other.nick : g.name, icon: g.icon, color: g.color, createdAt: g.created_at,
-        role: g.role, share: g.share, muted: !!g.muted,
+        role: g.role,
         code: admin && g.kind === "group" ? g.invite_code : null,
         codeTtl: g.code_ttl, codeExpiresAt: admin ? g.code_expires_at : null,
         members: ms.map((m) => ({ id: m.user_id, nick: m.nick, avatar: m.avatar, role: m.role, joinedAt: m.joined_at })),
@@ -346,7 +364,7 @@ async function createGroup(c: Ctx): Promise<Response> {
   const icon = oneOf(c.body.icon ?? "home", ["home", "school", "fitness", "family", "star", "work"] as const, "icon");
   const color = int(c.body.color ?? 0, 0, 4, "color");
   const id = uuid();
-  const t = now();
+  const t = now(c.req, c.env);
   const code = await freeInviteCode(c.env.DB);
   await c.env.DB.batch([
     c.env.DB.prepare("INSERT INTO groups (id, name, icon, color, kind, invite_code, code_expires_at, code_ttl, created_at) VALUES (?, ?, ?, ?, 'group', ?, ?, '7d', ?)")
@@ -385,29 +403,20 @@ async function patchGroup(c: Ctx, id: string): Promise<Response> {
     const ttl = oneOf(b.codeTtl, Object.keys(CODE_TTLS), "codeTtl");
     const ms = CODE_TTLS[ttl];
     sets.push("code_ttl = ?", "code_expires_at = ?");
-    vals.push(ttl, ms == null ? null : now() + ms);
+    vals.push(ttl, ms == null ? null : now(c.req, c.env) + ms);
   }
   if (sets.length) await c.env.DB.prepare(`UPDATE groups SET ${sets.join(", ")} WHERE id = ?`).bind(...vals, id).run();
   return json({ ok: true });
 }
 
-async function patchMembership(c: Ctx, id: string): Promise<Response> {
-  await requireMember(c, id);
-  const b = c.body;
-  if ("muted" in b) await c.env.DB.prepare("UPDATE members SET muted = ? WHERE group_id = ? AND user_id = ?").bind(b.muted ? 1 : 0, id, c.me.id).run();
-  if ("share" in b) {
-    const share = oneOf(b.share, SHARE_ORDER, "share");
-    await c.env.DB.prepare("UPDATE members SET share = ? WHERE group_id = ? AND user_id = ?").bind(share, id, c.me.id).run();
-  }
-  return json({ ok: true });
-}
+
 
 async function resetCode(c: Ctx, id: string): Promise<Response> {
   const g = await requireMember(c, id, true);
   if (g.kind !== "group") throw new HttpError(400, "pair_has_no_code");
   const code = await freeInviteCode(c.env.DB);
   const ms = CODE_TTLS[g.code_ttl] ?? null;
-  await c.env.DB.prepare("UPDATE groups SET invite_code = ?, code_expires_at = ? WHERE id = ?").bind(code, ms == null ? null : now() + ms, id).run();
+  await c.env.DB.prepare("UPDATE groups SET invite_code = ?, code_expires_at = ? WHERE id = ?").bind(code, ms == null ? null : now(c.req, c.env) + ms, id).run();
   return json({ code });
 }
 
@@ -458,21 +467,24 @@ function normalizeCode(raw: unknown): { kind: "group" | "pair"; code: string } {
   throw new HttpError(400, "bad_code");
 }
 
-async function groupByCode(db: D1Database, code: string): Promise<GroupRow> {
-  const g = await db.prepare("SELECT * FROM groups WHERE invite_code = ? AND kind = 'group'").bind(code).first<GroupRow>();
+async function groupByCode(c: Ctx, code: string): Promise<GroupRow> {
+  const g = await c.env.DB.prepare("SELECT * FROM groups WHERE invite_code = ? AND kind = 'group'").bind(code).first<GroupRow>();
   if (!g) throw new HttpError(404, "no_such_code");
-  if (g.code_expires_at != null && g.code_expires_at < now()) throw new HttpError(410, "code_expired");
+  if (g.code_expires_at != null && g.code_expires_at < now(c.req, c.env)) throw new HttpError(410, "code_expired");
   return g;
 }
 
 async function invitePreview(c: Ctx, raw: string): Promise<Response> {
+  const ip = c.req.headers.get("CF-Connecting-IP") ?? "local";
+  const limit = Number(c.env.RL_CODE) || 30;
+  await rateLimit(c.env.DB, `code:${ip}`, limit, 600_000);
   const { kind, code } = normalizeCode(decodeURIComponent(raw));
   if (kind === "pair") {
     const u = await c.env.DB.prepare("SELECT nick FROM users WHERE pair_code = ?").bind(code).first<{ nick: string }>();
     if (!u) throw new HttpError(404, "no_such_code");
     return json({ kind, name: u.nick, count: 1, names: [u.nick] });
   }
-  const g = await groupByCode(c.env.DB, code);
+  const g = await groupByCode(c, code);
   const ms = (await c.env.DB.prepare("SELECT u.nick FROM members m JOIN users u ON u.id = m.user_id WHERE m.group_id = ? ORDER BY m.joined_at")
     .bind(g.id).all<{ nick: string }>()).results;
   return json({ kind, name: g.name, count: ms.length, names: ms.slice(0, 3).map((m) => m.nick) });
@@ -480,10 +492,14 @@ async function invitePreview(c: Ctx, raw: string): Promise<Response> {
 
 async function join(c: Ctx): Promise<Response> {
   const db = c.env.DB;
+  const ip = c.req.headers.get("CF-Connecting-IP") ?? "local";
+  const limit = Number(c.env.RL_CODE) || 30;
+  await rateLimit(db, `code:${ip}`, limit, 600_000);
+  await rateLimit(db, `join:${c.me.id}`, 20, 600_000);
   const { kind, code } = normalizeCode(c.body.code);
-  const t = now();
+  const t = now(c.req, c.env);
   if (kind === "group") {
-    const g = await groupByCode(db, code);
+    const g = await groupByCode(c, code);
     await db.prepare("INSERT OR IGNORE INTO members (group_id, user_id, role, joined_at) VALUES (?, ?, 'member', ?)").bind(g.id, c.me.id, t).run();
     notifyFriends(c, "refresh");
     return json({ id: g.id, kind, name: g.name });

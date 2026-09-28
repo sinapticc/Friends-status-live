@@ -134,7 +134,7 @@ fun PrimaryButton(
         val c = if (enabled) t.onAcc else t.sub
         if (icon != null && iconFirst) Icon(icon, null, Modifier.padding(end = 8.dp).size(22.dp), tint = c)
         Text(text, style = Type.body(fontSize.sp, FontWeight.Black, c))
-        if (icon != null && !iconFirst) Icon(icon, null, Modifier.padding(start = 8.dp).size(22.dp).then(if (mirrorIcon) Modifier.scale(-1f, 1f) else Modifier), tint = c)
+        if (icon != null && !iconFirst) Icon(icon, null, Modifier.padding(start = 8.dp).size(22.dp).then(if (mirrorIcon && com.sinapticc.friendsstatus.model.L10n.isFa) Modifier.scale(-1f, 1f) else Modifier), tint = c)
     }
 }
 
@@ -223,7 +223,7 @@ fun <T> Segmented(
     }
 }
 
-/** Small rounded label used for places, distances and times. */
+/** Small rounded label used for status details and times. */
 @Composable
 fun InfoPill(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null, iconTint: Color? = null, fontSize: Int = 12, bg: Color? = null, fg: Color? = null) {
     val t = LocalTokens.current

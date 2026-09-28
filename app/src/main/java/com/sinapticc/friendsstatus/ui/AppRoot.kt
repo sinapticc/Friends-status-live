@@ -37,7 +37,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.sinapticc.friendsstatus.data.AppStore
+import com.sinapticc.friendsstatus.model.L10n
 import com.sinapticc.friendsstatus.model.Screen
+import com.sinapticc.friendsstatus.model.t
 import com.sinapticc.friendsstatus.ui.components.Label
 import com.sinapticc.friendsstatus.ui.components.ToastHost
 import com.sinapticc.friendsstatus.ui.components.tap
@@ -49,10 +51,13 @@ import com.sinapticc.friendsstatus.ui.screens.GroupScreen
 import com.sinapticc.friendsstatus.ui.screens.HomeScreen
 import com.sinapticc.friendsstatus.ui.screens.JoinCodeScreen
 import com.sinapticc.friendsstatus.ui.screens.JoinedScreen
-import com.sinapticc.friendsstatus.ui.screens.LocationScreen
+import com.sinapticc.friendsstatus.ui.screens.LanguageSheet
 import com.sinapticc.friendsstatus.ui.screens.PrivacyScreen
 import com.sinapticc.friendsstatus.ui.screens.ProfileScreen
 import com.sinapticc.friendsstatus.ui.screens.ProfileSetupScreen
+import com.sinapticc.friendsstatus.ui.screens.RecoverScreen
+import com.sinapticc.friendsstatus.ui.screens.RecoveryCodeScreen
+import com.sinapticc.friendsstatus.ui.screens.ScopeSheet
 import com.sinapticc.friendsstatus.ui.screens.StatusPickerSheet
 import com.sinapticc.friendsstatus.ui.screens.WelcomeScreen
 import com.sinapticc.friendsstatus.ui.theme.LocalInsets
@@ -66,7 +71,7 @@ fun AppRoot(store: AppStore) {
     val s = store.state
     val t = LocalTokens.current
     // The whole app is Persian, so it is always right-to-left regardless of the device language.
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    CompositionLocalProvider(LocalLayoutDirection provides if (L10n.isFa) LayoutDirection.Rtl else LayoutDirection.Ltr) {
         Box(
             Modifier
                 .fillMaxSize()
@@ -88,8 +93,8 @@ fun AppRoot(store: AppStore) {
                 when (screen) {
                     Screen.Welcome -> WelcomeScreen(store)
                     Screen.JoinCode -> JoinCodeScreen(store)
+                    Screen.Recover -> RecoverScreen(store)
                     Screen.ProfileSetup -> ProfileSetupScreen(store)
-                    Screen.Location -> LocationScreen(store)
                     Screen.Joined -> JoinedScreen(store)
                     Screen.Home -> HomeScreen(store)
                     Screen.Friend -> FriendScreen(store)
@@ -98,6 +103,7 @@ fun AppRoot(store: AppStore) {
                     Screen.Profile -> ProfileScreen(store)
                     Screen.Editor -> EditorScreen(store)
                     Screen.Crop -> CropScreen(store)
+                    Screen.RecoveryCode -> RecoveryCodeScreen(store)
                 }
             }
             if (s.screen in listOf(Screen.Home, Screen.Privacy, Screen.Profile)) {
@@ -106,6 +112,10 @@ fun AppRoot(store: AppStore) {
             if (s.screen == Screen.Home) {
                 StatusPickerSheet(store)
                 AddSheet(store)
+                ScopeSheet(store)
+            }
+            if (s.screen == Screen.Profile) {
+                LanguageSheet(store)
             }
             ToastHost(s.toast)
         }
@@ -116,8 +126,8 @@ fun AppRoot(store: AppStore) {
 private fun BottomNav(current: Screen, modifier: Modifier, onGo: (Screen) -> Unit) {
     val t = LocalTokens.current
     val items = listOf(
-        Triple(Screen.Home, "رفقا", Icons.Rounded.Group to Icons.Outlined.Group),
-        Triple(Screen.Profile, "تو", Icons.Rounded.Person to Icons.Outlined.Person),
+        Triple(Screen.Home, t("رفقا", "Friends"), Icons.Rounded.Group to Icons.Outlined.Group),
+        Triple(Screen.Profile, t("من", "Me"), Icons.Rounded.Person to Icons.Outlined.Person),
     )
     Column(modifier.fillMaxWidth().background(t.nav)) {
         Box(Modifier.fillMaxWidth().height(1.dp).background(t.line))

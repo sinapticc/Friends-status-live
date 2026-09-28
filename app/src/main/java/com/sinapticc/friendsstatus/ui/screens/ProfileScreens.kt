@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Casino
 import androidx.compose.material.icons.rounded.Checkroom
 import androidx.compose.material.icons.rounded.Close
@@ -43,6 +44,8 @@ import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.ZoomIn
 import androidx.compose.material.icons.rounded.ZoomOut
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -76,11 +79,13 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.sinapticc.friendsstatus.data.AppStore
+import com.sinapticc.friendsstatus.model.t
 import com.sinapticc.friendsstatus.model.Catalog
 import com.sinapticc.friendsstatus.model.Fa
 import com.sinapticc.friendsstatus.model.Screen
 import com.sinapticc.friendsstatus.ui.NavHeight
 import com.sinapticc.friendsstatus.ui.components.Card
+import com.sinapticc.friendsstatus.ui.components.BottomSheet
 import com.sinapticc.friendsstatus.ui.components.IconCircle
 import com.sinapticc.friendsstatus.ui.components.InitialAvatar
 import com.sinapticc.friendsstatus.ui.components.Label
@@ -122,8 +127,8 @@ fun ProfileScreen(store: AppStore) {
         )
     }) {
         TopBar(
-            start = { Label("پروفایل", 13, t.sub) },
-            end = { IconCircle(Icons.Rounded.Security, "حریم خصوصی", onClick = { store.go(Screen.Privacy) }) },
+            start = { Label(t("پروفایل", "Profile"), 13, t.sub) },
+            end = { IconCircle(Icons.Rounded.Security, t("حریم خصوصی", "Privacy"), onClick = { store.go(Screen.Privacy) }) },
         )
         // Photo with the character leaning in
         Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
@@ -142,16 +147,16 @@ fun ProfileScreen(store: AppStore) {
                     contentAlignment = Alignment.Center,
                 ) {
                     val photo = s.photo
-                    if (photo != null) Image(photo, "عکس پروفایل", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    if (photo != null) Image(photo, t("عکس پروفایل", "Profile photo"), Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                     else Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Rounded.AddPhotoAlternate, null, Modifier.size(30.dp), tint = Ink.copy(alpha = .6f))
-                        Label("عکست", 11, Ink.copy(alpha = .6f))
+                        Label(t("عکست", "Your photo"), 11, Ink.copy(alpha = .6f))
                     }
                 }
                 Box(Modifier.align(Alignment.TopEnd).offset(y = 40.dp).size(104.dp).tap { store.go(Screen.Editor) }) {
                     MeChar(s.look, Modifier.fillMaxSize(), idle = true)
                 }
-                IconCircle(Icons.Rounded.PhotoCamera, "تغییر عکس", Modifier.align(Alignment.TopStart).offset(x = 22.dp, y = 88.dp), size = 36.dp, iconSize = 19.dp, bg = t.fg, tint = t.bg, onClick = store::openCrop)
+                IconCircle(Icons.Rounded.PhotoCamera, t("تغییر عکس", "Change photo"), Modifier.align(Alignment.TopStart).offset(x = 22.dp, y = 88.dp), size = 36.dp, iconSize = 19.dp, bg = t.fg, tint = t.bg, onClick = store::openCrop)
             }
         }
         Column(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -166,11 +171,11 @@ fun ProfileScreen(store: AppStore) {
             ) {
                 StatusChar(s.me.key, Modifier.size(30.dp), hue = s.me.hue)
                 RowSpacer(8.dp)
-                Label(s.me.text, 13, t.fg)
+                Label(Catalog.displayText(s.me.key, s.me.text), 13, t.fg)
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(s.realGroups.size to "گروه", s.pairIds.size to "دونفره", s.friends.size to "رفیق").forEach { (n, l) ->
+            listOf(s.realGroups.size to t("گروه", "Group"), s.pairIds.size to t("دونفره", "1-on-1"), s.friends.size to t("رفیق", "Friend")).forEach { (n, l) ->
                 Column(
                     Modifier.weight(1f).clip(RoundedCornerShape(22.dp)).background(t.card).border(1.dp, t.line, RoundedCornerShape(22.dp)).padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -187,7 +192,7 @@ fun ProfileScreen(store: AppStore) {
             ) {
                 Icon(Icons.Rounded.Style, null, Modifier.size(20.dp), tint = t.onAcc)
                 RowSpacer(8.dp)
-                Label("ویرایش کاراکتر", 15, t.onAcc, FontWeight.Black)
+                Label(t("ویرایش کاراکتر", "Edit character"), 15, t.onAcc, FontWeight.Black)
             }
             Row(
                 Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(27.dp)).background(t.tonal).pressTap(.95f) { store.go(Screen.ProfileSetup) },
@@ -195,11 +200,11 @@ fun ProfileScreen(store: AppStore) {
             ) {
                 Icon(Icons.Rounded.Edit, null, Modifier.size(20.dp), tint = t.fg)
                 RowSpacer(8.dp)
-                Label("ویرایش پروفایل", 15, t.fg, FontWeight.Black)
+                Label(t("ویرایش پروفایل", "Edit Profile"), 15, t.fg, FontWeight.Black)
             }
         }
 
-        SectionHeader("وضعیت‌های محبوب", "دسترسی سریع در انتخابگر")
+        SectionHeader(t("وضعیت‌های محبوب", "Popular statuses"), t("دسترسی سریع در انتخابگر", "Quick access in picker"))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             s.favorites.take(4).forEach { k ->
                 Box(Modifier.size(64.dp)) {
@@ -215,7 +220,7 @@ fun ProfileScreen(store: AppStore) {
             Box(
                 Modifier.size(64.dp).clip(RoundedCornerShape(22.dp)).border(1.5.dp, t.sub, RoundedCornerShape(22.dp)).tap { store.tab(Screen.Home); store.openSheet() },
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Add, "افزودن", Modifier.size(26.dp), tint = t.sub) }
+            ) { Icon(Icons.Rounded.Add, t("افزودن", "Add"), Modifier.size(26.dp), tint = t.sub) }
         }
 
         // 1-on-1 code
@@ -233,17 +238,24 @@ fun ProfileScreen(store: AppStore) {
             }
             RowSpacer(14.dp)
             Column(Modifier.weight(1f)) {
-                Label("کد دونفره‌ی من", 12, Color.White.copy(alpha = .8f))
+                Label(t("کد دونفره‌ی من", "My 1-on-1 code"), 12, Color.White.copy(alpha = .8f))
                 Title(if (s.pairCode.length == 7) s.pairCode.take(3) + "·" + s.pairCode.drop(3) else "…", 22, Color.White)
-                Label("برای یه فضای خصوصی با یه رفیق", 12, Color.White.copy(alpha = .85f), FontWeight.Bold)
+                Label(t("برای یه فضای دونفره با یه رفیق", "For a 1-on-1 space with a friend"), 12, Color.White.copy(alpha = .85f), FontWeight.Bold)
             }
-            IconCircle(Icons.Rounded.Share, "اشتراک", bg = Color.White.copy(alpha = .2f), tint = Color.White, onClick = store::shareMyCode)
+            IconCircle(Icons.Rounded.Share, t("اشتراک", "Share"), bg = Color.White.copy(alpha = .2f), tint = Color.White, onClick = store::shareMyCode)
         }
 
-        SectionHeader("تنظیمات")
+        SectionHeader(t("تنظیمات", "Settings"))
         Box {
             SettingsGroup {
-                SettingsRow(Icons.Rounded.Security, "حریم خصوصی و مکان", chevron = true) { store.go(Screen.Privacy) }
+                val curLang = store.platform.getLanguagePref()
+                val langLabel = when(curLang) {
+                    "fa" -> "فارسی"
+                    "en" -> "English"
+                    else -> t("خودکار (زبان گوشی)", "Auto (phone language)")
+                }
+                SettingsRow(Icons.Rounded.Language, t("زبان", "Language"), value = langLabel, chevron = true) { store.openLanguage() }
+                SettingsRow(Icons.Rounded.Security, t("حریم خصوصی", "Privacy"), chevron = true) { store.go(Screen.Privacy) }
             }
         }
     }
@@ -265,11 +277,11 @@ fun EditorScreen(store: AppStore) {
         var spin by remember { mutableIntStateOf(0) }
         val spinAngle by animateFloatAsState(spin * 90f, bouncy(), label = "spin")
         TopBar(
-            start = { IconCircle(Icons.Rounded.ArrowForward, "برگشت", iconSize = 24.dp, onClick = store::back) },
-            middle = { Title("کاراکترت", 18) },
+            start = { IconCircle(if (com.sinapticc.friendsstatus.model.L10n.isFa) Icons.Rounded.ArrowForward else Icons.Rounded.ArrowBack, t("برگشت", "Back"), iconSize = 24.dp, onClick = store::back) },
+            middle = { Title(t("کاراکترت", "Your character"), 18) },
             end = {
                 IconCircle(
-                    Icons.Rounded.Casino, "تصادفی", Modifier.rotate(spinAngle), iconSize = 24.dp, bg = t.vio, tint = Ink, shape = RoundedCornerShape(14.dp),
+                    Icons.Rounded.Casino, t("تصادفی", "Random"), Modifier.rotate(spinAngle), iconSize = 24.dp, bg = t.vio, tint = Ink, shape = RoundedCornerShape(14.dp),
                     onClick = { spin++; store.randomizeLook() },
                 )
             },
@@ -302,13 +314,13 @@ fun EditorScreen(store: AppStore) {
                 Modifier.align(Alignment.TopStart).padding(14.dp).clip(RoundedCornerShape(99.dp)).background(Color.Black.copy(alpha = .35f)).padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Label("سطح استایل ${Fa.num(look.level)}", 12, Color(0xFFFFD23A), FontWeight.Black)
+                Label(t("سطح استایل ${Fa.num(look.level)}", "Style level ${look.level}"), 12, Color(0xFFFFD23A), FontWeight.Black)
                 RowSpacer(6.dp)
                 repeat(4) { i -> Box(Modifier.padding(start = 2.dp).size(8.dp).clip(RoundedCornerShape(2.dp)).background(if (i < look.level) Color(0xFFFFD23A) else Color.White.copy(alpha = .2f))) }
             }
         }
         Segmented(listOf("color", "face", "items", "outfit"), tab, store::setEditorTab, Modifier.padding(top = 14.dp)) { k, c ->
-            val (icon, label) = when (k) { "color" -> Icons.Rounded.Palette to "رنگ"; "face" -> Icons.Rounded.Mood to "صورت"; "items" -> Icons.Rounded.Checkroom to "وسایل"; else -> Icons.Rounded.Face to "لباس" }
+            val (icon, label) = when (k) { "color" -> Icons.Rounded.Palette to t("رنگ", "Color"); "face" -> Icons.Rounded.Mood to t("صورت", "Face"); "items" -> Icons.Rounded.Checkroom to t("وسایل", "Items"); else -> Icons.Rounded.Face to t("لباس", "Outfit") }
             Icon(icon, null, Modifier.size(18.dp), tint = c)
             RowSpacer(4.dp)
             Label(label, 13, c, FontWeight.Black)
@@ -365,7 +377,7 @@ fun EditorScreen(store: AppStore) {
                 }
             }
         }
-        PrimaryButton("ذخیره‌ی استایل", store::saveLook, Modifier.padding(top = 12.dp), height = 58.dp)
+        PrimaryButton(t("ذخیره", "Save"), store::saveLook, Modifier.padding(top = 12.dp), height = 58.dp)
     }
 }
 
@@ -392,10 +404,10 @@ fun CropScreen(store: AppStore) {
     ) {
         Box(Modifier.padding(horizontal = 16.dp)) {
             TopBar(
-                start = { IconCircle(Icons.Rounded.Close, "بستن", iconSize = 24.dp, bg = Color.White.copy(alpha = .1f), tint = Color.White, onClick = store::back) },
-                middle = { Title("برش عکس", 18, Color.White) },
+                start = { IconCircle(Icons.Rounded.Close, t("بستن", "Close"), iconSize = 24.dp, bg = Color.White.copy(alpha = .1f), tint = Color.White, onClick = store::back) },
+                middle = { Title(t("برش عکس", "Crop photo"), 18, Color.White) },
                 end = {
-                    IconCircle(Icons.Rounded.RotateLeft, "چرخش", bg = Color.White.copy(alpha = .1f), tint = Color.White, onClick = {
+                    IconCircle(Icons.Rounded.RotateLeft, t("چرخش", "Rotate"), bg = Color.White.copy(alpha = .1f), tint = Color.White, onClick = {
                         source = source?.let { rotate90(it) }
                         pan = Offset.Zero
                     })
@@ -416,8 +428,8 @@ fun CropScreen(store: AppStore) {
             circleUsed = circlePx
             if (img == null) {
                 Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconCircle(Icons.Rounded.AddPhotoAlternate, "انتخاب عکس", size = 88.dp, iconSize = 40.dp, bg = Color.White.copy(alpha = .1f), tint = Color.White, onClick = store::pickPhoto)
-                    Label("یه عکس انتخاب کن", 15, Color.White, modifier = Modifier.padding(top = 12.dp))
+                    IconCircle(Icons.Rounded.AddPhotoAlternate, t("انتخاب عکس", "Select photo"), size = 88.dp, iconSize = 40.dp, bg = Color.White.copy(alpha = .1f), tint = Color.White, onClick = store::pickPhoto)
+                    Label(t("یه عکس انتخاب کن", "Choose a photo"), 15, Color.White, modifier = Modifier.padding(top = 12.dp))
                 }
             } else {
                 // Base scale covers the circle, so the crop never shows empty space.
@@ -468,10 +480,10 @@ fun CropScreen(store: AppStore) {
             RowSpacer(12.dp)
             Icon(Icons.Rounded.ZoomOut, null, Modifier.size(20.dp), tint = Color.White.copy(alpha = .7f))
         }
-        Label("با دو انگشت بزرگ کن · بکش تا جابه‌جا بشه · کاراکترت روش می‌شینه", 12, Color.White.copy(alpha = .6f), FontWeight.Bold, Modifier.fillMaxWidth().padding(top = 12.dp, start = 16.dp, end = 16.dp))
+        Label(t("با دو انگشت زوم کن و بکش تا جابه‌جا شه", "Pinch to zoom, drag to pan"), 12, Color.White.copy(alpha = .6f), FontWeight.Bold, Modifier.fillMaxWidth().padding(top = 12.dp, start = 16.dp, end = 16.dp))
         Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp)) {
-            if (img == null) PrimaryButton("انتخاب عکس", store::pickPhoto, height = 58.dp)
-            else PrimaryButton("همین عکس", { store.usePhoto(cropCircle(img, zoom, pan, circleUsed)) }, height = 58.dp)
+            if (img == null) PrimaryButton(t("انتخاب عکس", "Select photo"), store::pickPhoto, height = 58.dp)
+            else PrimaryButton(t("همین عکس", "Use this photo"), { store.usePhoto(cropCircle(img, zoom, pan, circleUsed)) }, height = 58.dp)
         }
     }
 }
@@ -529,4 +541,37 @@ private fun rotate90(img: ImageBitmap): ImageBitmap {
     c.rotate(-90f)
     c.drawImage(img, Offset.Zero, Paint())
     return out
+}
+
+@Composable
+fun androidx.compose.foundation.layout.BoxScope.LanguageSheet(store: AppStore) {
+    val s = store.state
+    val t = LocalTokens.current
+    BottomSheet(visible = s.overlays.languageOpen, onDismiss = store::closeOverlays) {
+        Title(t("زبان", "Language"), 22, modifier = Modifier.padding(bottom = 12.dp))
+        val cur = store.platform.getLanguagePref()
+        listOf(
+            "auto" to t("خودکار (زبان گوشی)", "Auto (phone language)"),
+            "fa" to "فارسی",
+            "en" to "English"
+        ).forEach { (k, label) ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (k == cur) t.selectedBg else t.tonal)
+                    .pressTap { store.setLanguage(k) }
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Label(label, 16, t.fg, FontWeight.Bold)
+                if (k == cur) {
+                    Icon(Icons.Rounded.Check, null, Modifier.size(20.dp), tint = t.acc)
+                }
+            }
+        }
+        RowSpacer(12.dp)
+    }
 }

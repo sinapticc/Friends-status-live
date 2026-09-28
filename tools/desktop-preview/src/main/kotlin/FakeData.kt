@@ -1,11 +1,11 @@
-package com.sinapticc.friendsstatus.data
+
 
 import androidx.compose.ui.graphics.Color
+import com.sinapticc.friendsstatus.data.AppStore
 import com.sinapticc.friendsstatus.model.Friend
 import com.sinapticc.friendsstatus.model.HistoryItem
 import com.sinapticc.friendsstatus.model.GroupInfo
 import com.sinapticc.friendsstatus.model.MemberInfo
-import com.sinapticc.friendsstatus.model.ShareLevel
 
 /**
  * Sample friends and groups for demo mode, used when the app is built without a server
@@ -15,37 +15,37 @@ object FakeData {
     private fun h(vararg items: Triple<String, String, String>) = items.map { HistoryItem(it.first, it.second, it.third) }
 
     val friends: List<Friend> = listOf(
-        Friend("arash", "آرش", setOf("flat", "uni"), "partying", "بیا کافه لافت", "کافه لافت", "۵٫۱ کیلومتر", 1,
+        Friend("arash", "آرش", setOf("flat", "uni"), "partying", "بیا کافه لافت", 1,
             Color(0xFFC9B6FF), Color(0xFF8A6CFF),
             h(Triple("coffee", "اسپرسوی قبل مهمونی", "17:20"), Triple("gaming", "رنکدم. حرف نزنید", "15:02"), Triple("sleeping", "خمارم. معلومه", "11:30"))),
-        Friend("maryam", "مریم", setOf("flat", "uni", "pair-maryam"), "toilet", "زنگ نزنید لطفاً", "خونه", "۱٫۲ کیلومتر", 4,
+        Friend("maryam", "مریم", setOf("flat", "uni", "pair-maryam"), "toilet", "زنگ نزنید لطفاً", 4,
             Color(0xFFFFC0D2), Color(0xFFFF7AA0),
             h(Triple("eating", "ناهار دوم", "14:10"), Triple("work", "این جلسه می‌تونست یه ایمیل باشه", "10:05"), Triple("sleeping", "فقط ۵ دقیقه دیگه", "07:40"))),
-        Friend("saman", "سامان", setOf("flat", "gym"), "driving", "۵ دقیقه دیگه اونجام. قول", "اتوبان همت", "در حرکت", 8,
+        Friend("saman", "سامان", setOf("flat", "gym"), "driving", "۵ دقیقه دیگه اونجام. قول", 8,
             Color(0xFFB5F7D1), Color(0xFF3FCF8A),
             h(Triple("work", "شیفتم ۶ تموم می‌شه", "15:30"), Triple("coffee", "سومیش", "12:00"), Triple("walking", "سگ‌گردونی", "08:15"))),
-        Friend("nima", "نیما", setOf("gym"), "gym", "روز پا. دعام کنید", "باشگاه انقلاب", "۲٫۸ کیلومتر", 12,
+        Friend("nima", "نیما", setOf("gym"), "gym", "روز پا. دعام کنید", 12,
             Color(0xFFAEEAFF), Color(0xFF4FB6FF),
             h(Triple("eating", "همه‌چی پروتئینی", "16:00"), Triple("studying", "ادای درس خوندن", "12:30"), Triple("sleeping", "خررر", "06:00"))),
-        Friend("pariya", "پریا", setOf("uni"), "studying", "۰ صفحه، ۳ تا قهوه", "کتابخونه‌ی دانشگاه", "۲٫۳ کیلومتر", 26,
+        Friend("pariya", "پریا", setOf("uni"), "studying", "۰ صفحه، ۳ تا قهوه", 26,
             Color(0xFFFFE0A0), Color(0xFFFFAB3D),
             h(Triple("coffee", "قهوه‌ی سوم", "16:45"), Triple("bored", "این کلاس ۳ ساعته", "11:00"), Triple("walking", "دیرم شده. دارم می‌دوام", "08:50"))),
-        Friend("kian", "کیان", setOf("flat"), "sleeping", "بیدارم نکنید", "خونه", "۴ کیلومتر", 125,
+        Friend("kian", "کیان", setOf("flat"), "sleeping", "بیدارم نکنید", 125,
             Color(0xFFECD4FF), Color(0xFFB98CFF),
             h(Triple("sick", "سوپ بیارید", "13:00"), Triple("showering", "دارم بد می‌خونم", "09:20"), Triple("gaming", "فقط یه دست دیگه", "02:10"))),
-        Friend("zhina", "ژینا", setOf("uni"), "shopping", "خرید درمانی", "پاساژ", "۳٫۴ کیلومتر", 18,
+        Friend("zhina", "ژینا", setOf("uni"), "shopping", "خرید درمانی", 18,
             Color(0xFFFFD0E6), Color(0xFFFF5CA8),
             h(Triple("coffee", "آیس لاته", "14:00"), Triple("studying", "ساعت ۱۰ کوییز دارم", "09:30"))),
-        Friend("kaveh", "کاوه", setOf("gym"), "football", "۲–۱ بریم که داشته باشیم", "خونه", "۱٫۸ کیلومتر", 6,
+        Friend("kaveh", "کاوه", setOf("gym"), "football", "۲–۱ بریم که داشته باشیم", 6,
             Color(0xFFC8F59A), Color(0xFF5FB814),
             h(Triple("gym", "روز سینه", "17:00"), Triple("eating", "شام بعد باشگاه", "18:10"))),
-        Friend("raha", "رها", setOf("pair-raha"), "cooking", "دارم غذای موردعلاقه‌تو می‌پزم", "خونه", "۰٫۴ کیلومتر", 3,
+        Friend("raha", "رها", setOf("pair-raha"), "cooking", "دارم غذای موردعلاقه‌تو می‌پزم", 3,
             Color(0xFFFFE6A0), Color(0xFFFFB13D),
             h(Triple("walking", "رفتم خرید", "17:40"), Triple("work", "آخرین تماس، قول", "15:00"))),
-        Friend("maman", "مامان", setOf("fam"), "meditating", "یوگا، بعد زنگ می‌زنم", "خونه", "۴۲ کیلومتر", 34,
+        Friend("maman", "مامان", setOf("fam"), "meditating", "یوگا، بعد زنگ می‌زنم", 34,
             Color(0xFFE0D0FF), Color(0xFFA07CFF),
             h(Triple("cooking", "دارم ناهار جمعه رو آماده می‌کنم", "12:00"))),
-        Friend("baba", "بابا", setOf("fam"), "barber", "موهام رو کوتاه کردم", "آرایشگاه", "۴۱ کیلومتر", 52,
+        Friend("baba", "بابا", setOf("fam"), "barber", "موهام رو کوتاه کردم", 52,
             Color(0xFFB8D8FF), Color(0xFF4F86FF),
             h(Triple("driving", "تو جاده‌ی چالوس", "10:30"))),
     )
@@ -56,12 +56,12 @@ object FakeData {
             else friends.first { it.id == id }.let { MemberInfo(it.id, it.name, 0, id == "arash") }
         }
         listOf(
-            GroupInfo("flat", "هم‌خونه‌ها", "home", 0, false, true, ShareLevel.Exact, false, "482913", "7d", members(AppStore.ME_ID, "arash", "maryam", "saman", "kian")),
-            GroupInfo("uni", "بچه‌های دانشگاه", "school", 3, false, false, ShareLevel.Approx, false, null, "7d", members(AppStore.ME_ID, "arash", "maryam", "pariya", "zhina")),
-            GroupInfo("gym", "رفقای باشگاه", "fitness", 2, false, false, ShareLevel.Approx, false, null, "7d", members(AppStore.ME_ID, "saman", "nima", "kaveh")),
-            GroupInfo("fam", "خانواده", "family", 1, false, false, ShareLevel.StatusOnly, false, null, "7d", members(AppStore.ME_ID, "maman", "baba")),
-            GroupInfo("pair-maryam", "مریم", "favorite", 1, true, false, ShareLevel.Exact, false, null, "never", members(AppStore.ME_ID, "maryam")),
-            GroupInfo("pair-raha", "رها", "favorite", 1, true, false, ShareLevel.Exact, false, null, "never", members(AppStore.ME_ID, "raha")),
+            GroupInfo("flat", "هم‌خونه‌ها", "home", 0, false, true, "482913", "7d", members(AppStore.ME_ID, "arash", "maryam", "saman", "kian")),
+            GroupInfo("uni", "بچه‌های دانشگاه", "school", 3, false, false, null, "7d", members(AppStore.ME_ID, "arash", "maryam", "pariya", "zhina")),
+            GroupInfo("gym", "رفقای باشگاه", "fitness", 2, false, false, null, "7d", members(AppStore.ME_ID, "saman", "nima", "kaveh")),
+            GroupInfo("fam", "خانواده", "family", 1, false, false, null, "7d", members(AppStore.ME_ID, "maman", "baba")),
+            GroupInfo("pair-maryam", "مریم", "favorite", 1, true, false, null, "never", members(AppStore.ME_ID, "maryam")),
+            GroupInfo("pair-raha", "رها", "favorite", 1, true, false, null, "never", members(AppStore.ME_ID, "raha")),
         )
     }
 

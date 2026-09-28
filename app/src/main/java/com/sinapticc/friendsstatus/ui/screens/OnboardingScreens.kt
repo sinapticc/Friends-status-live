@@ -25,12 +25,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.BlurOn
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Link
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,6 +64,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sinapticc.friendsstatus.data.AppStore
+import com.sinapticc.friendsstatus.model.t
 import com.sinapticc.friendsstatus.model.Catalog
 import com.sinapticc.friendsstatus.model.Fa
 import com.sinapticc.friendsstatus.ui.components.Card
@@ -90,7 +89,7 @@ import com.sinapticc.friendsstatus.ui.theme.LocalTokens
 import com.sinapticc.friendsstatus.ui.theme.Type
 
 @Composable
-private fun BackButton(onClick: () -> Unit) = IconCircle(Icons.Rounded.ArrowForward, "برگشت", iconSize = 24.dp, onClick = onClick)
+private fun BackButton(onClick: () -> Unit) = IconCircle(if (com.sinapticc.friendsstatus.model.L10n.isFa) Icons.Rounded.ArrowForward else Icons.Rounded.ArrowBack, t("برگشت", "Back"), iconSize = 24.dp, onClick = onClick)
 
 /** Draws a fixed-size illustration scaled down to fit the space it is given. */
 @Composable
@@ -137,17 +136,21 @@ fun WelcomeScreen(store: AppStore) {
         ColumnSpacer(18.dp)
         Text(
             buildAnnotatedString {
-                append("رفقات.\nزنده. ")
-                withStyle(SpanStyle(color = t.acc)) { append("بی‌فیلتر.") }
+                append(t("رفقات.\nزنده. ", "Friends.\nLive. "))
+                withStyle(SpanStyle(color = t.acc)) { append(t("بی‌فیلتر.", "Unfiltered.")) }
             },
             style = Type.display(40.sp, t.fg),
         )
         ColumnSpacer(12.dp)
-        Label("با یه لمس بگو داری چی‌کار می‌کنی. همون لحظه روی صفحه‌ی گوشی رفقات می‌شینه.", 16, t.sub, FontWeight.Bold)
+        Label(t("با یه لمس بگو داری چی‌کار می‌کنی. همون لحظه روی صفحه‌ی گوشی رفقات می‌شینه.", "Share what you're up to in one tap."), 16, t.sub, FontWeight.Bold)
         ColumnSpacer(24.dp)
-        PrimaryButton("یه گروه بساز", store::startCreate)
+        PrimaryButton(t("یه گروه بساز", "Create a group"), store::startCreate)
         ColumnSpacer(10.dp)
-        TonalButton("کد دعوت دارم", store::startJoin)
+        TonalButton(t("کد دعوت دارم", "I have an invite code"), store::startJoin)
+        ColumnSpacer(8.dp)
+        Box(Modifier.fillMaxWidth().height(40.dp).tap(store::startRecover), contentAlignment = Alignment.Center) {
+            Label(t("قبلاً حساب داشتم", "I already have an account"), 14, t.sub)
+        }
     }
 }
 
@@ -162,8 +165,8 @@ fun JoinCodeScreen(store: AppStore) {
     val code = s.joinCode
     FixedScreen {
         BackButton(store::back)
-        Title("به جمع بپیوند", 32, modifier = Modifier.padding(top = 28.dp))
-        Label("کد ۶ رقمی‌ای که رفیقت فرستاده رو وارد کن.", 16, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp))
+        Title(t("به جمع بپیوند", "Join the crew"), 32, modifier = Modifier.padding(top = 28.dp))
+        Label(t("کدی که رفیقت فرستاده رو بزن.", "Enter the code your friend sent."), 16, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp))
         // The visible boxes mirror a hidden text field that owns the keyboard.
         Box(Modifier.padding(top = 28.dp)) {
             BasicTextField(
@@ -205,7 +208,7 @@ fun JoinCodeScreen(store: AppStore) {
                     Column(Modifier.weight(1f)) {
                         Title(preview.name, 17, maxLines = 1)
                         val more = preview.count - preview.names.size
-                        Label(preview.names.joinToString("، ") + if (more > 0) " + ${Fa.num(more)} نفر دیگه" else "", 13, t.sub, FontWeight.Bold, maxLines = 1)
+                        Label(preview.names.joinToString(t("، ", ", ")) + if (more > 0) t(" + ${Fa.num(more)} نفر دیگه", " + ${more} more") else "", 13, t.sub, FontWeight.Bold, maxLines = 1)
                     }
                     Icon(Icons.Rounded.CheckCircle, null, Modifier.size(26.dp), tint = t.acc)
                 }
@@ -213,7 +216,7 @@ fun JoinCodeScreen(store: AppStore) {
         }
         Row(Modifier.fillMaxWidth().padding(top = 26.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f).height(1.dp).background(t.line))
-            Label("یا", 12, t.sub, modifier = Modifier.padding(horizontal = 12.dp))
+            Label(t("یا", "or"), 12, t.sub, modifier = Modifier.padding(horizontal = 12.dp))
             Box(Modifier.weight(1f).height(1.dp).background(t.line))
         }
         Row(
@@ -230,10 +233,10 @@ fun JoinCodeScreen(store: AppStore) {
         ) {
             Icon(Icons.Rounded.Link, null, Modifier.size(20.dp), tint = t.sub)
             RowSpacer(8.dp)
-            Label("لینک دعوت رو بچسبون", 15, t.sub)
+            Label(t("لینک دعوت رو بچسبون", "Paste invite link"), 15, t.sub)
         }
         Fill()
-        PrimaryButton(if (preview != null) "ورود به «${preview.name}»" else "ادامه", store::submitJoinCode, enabled = code.length == 6 && preview != null)
+        PrimaryButton(if (preview != null) t("بریم تو «${preview.name}»", "Join ${preview.name}") else t("ادامه", "Continue"), store::submitJoinCode, enabled = code.length == 6 && preview != null)
     }
 }
 
@@ -246,11 +249,11 @@ fun ProfileSetupScreen(store: AppStore) {
     val (a, b) = Catalog.avatarColors[s.avatar]
     FixedScreen {
         BackButton(store::back)
-        Title(if (s.onboarded) "ویرایش پروفایل" else "تو کی هستی؟", 32, modifier = Modifier.padding(top = 24.dp))
-        Label("این‌جوری روی صفحه‌ی رفقات دیده می‌شی.", 16, t.sub, FontWeight.Bold, Modifier.padding(top = 6.dp))
+        Title(if (s.onboarded) t("ویرایش پروفایل", "Edit Profile") else t("تو کی هستی؟", "Who are you?"), 32, modifier = Modifier.padding(top = 24.dp))
+        Label(t("رفقات این‌جوری می‌بیننت.", "How friends see you."), 16, t.sub, FontWeight.Bold, Modifier.padding(top = 6.dp))
         Box(Modifier.fillMaxWidth().padding(top = 26.dp), contentAlignment = Alignment.Center) {
             Box(Modifier.size(128.dp)) {
-                InitialAvatar(s.nick.take(1).ifEmpty { "؟" }, a, b, 128.dp, Modifier.shadow(20.dp, CircleShape))
+                InitialAvatar(s.nick.take(1).ifEmpty { t("؟", "?") }, a, b, 128.dp, Modifier.shadow(20.dp, CircleShape))
                 StatusChar("free", Modifier.align(Alignment.TopEnd).offset(x = 26.dp, y = (-18).dp).size(72.dp), idle = true)
             }
         }
@@ -266,7 +269,7 @@ fun ProfileSetupScreen(store: AppStore) {
                 )
             }
         }
-        Label("اسم مستعار", 12, t.sub, modifier = Modifier.padding(top = 26.dp, start = 6.dp))
+        Label(t("اسم مستعار", "Nickname"), 12, t.sub, modifier = Modifier.padding(top = 26.dp, start = 6.dp))
         BasicTextField(
             value = s.nick,
             onValueChange = store::setNick,
@@ -287,66 +290,9 @@ fun ProfileSetupScreen(store: AppStore) {
                 ) { inner() }
             },
         )
-        Label("رفقا بعداً می‌تونن برات لقب بذارن. آماده باش.", 13, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp, start = 6.dp))
+        Label(t("رفقات بعداً می‌تونن برات لقب بذارن.", "Friends can give you a nickname later."), 13, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp, start = 6.dp))
         Fill()
-        PrimaryButton(if (s.onboarded) "ذخیره" else "عالیه", { if (s.onboarded) store.saveProfile() else store.profileNext() }, enabled = s.nick.isNotBlank())
-    }
-}
-
-// ------------------------------------------------------------------ Where you at?
-
-@Composable
-fun LocationScreen(store: AppStore) {
-    val t = LocalTokens.current
-    FixedScreen {
-        // The design's map illustration is gone with the map; this keeps the idea of an approximate label.
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(260.dp)
-                .clip(RoundedCornerShape(36.dp))
-                .background(Brush.linearGradient(listOf(Color(0xFF221A36), Color(0xFF15101F))))
-                .border(1.dp, Color.White.copy(alpha = .06f), RoundedCornerShape(36.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(
-                Modifier
-                    .size(170.dp)
-                    .clip(CircleShape)
-                    .background(Brush.radialGradient(listOf(Lime.copy(alpha = .28f), Lime.copy(alpha = .06f), Color.Transparent)))
-                    .drawBehind {
-                        drawCircle(Lime.copy(alpha = .5f), style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 10f))))
-                    }
-            )
-            StatusChar("walking", Modifier.offset(y = (-10).dp).size(96.dp), idle = true)
-            InitialAvatar("آ", Color(0xFFC9B6FF), Color(0xFF8A6CFF), 36.dp, Modifier.align(Alignment.TopStart).offset(x = 40.dp, y = 40.dp), ring = Color(0xFF15101F), ringWidth = 3.dp)
-            InitialAvatar("م", Color(0xFFFFC0D2), Color(0xFFFF7AA0), 36.dp, Modifier.align(Alignment.TopEnd).offset(x = (-40).dp, y = 56.dp), ring = Color(0xFF15101F), ringWidth = 3.dp)
-            Box(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 22.dp)
-                    .clip(RoundedCornerShape(99.dp))
-                    .background(Color.White.copy(alpha = .12f))
-                    .padding(horizontal = 14.dp, vertical = 7.dp)
-            ) { Label("«دانشگاه» · حدود ۲ کیلومتر", 13, Color.White) }
-        }
-        Title("کجایی؟", 32, modifier = Modifier.padding(top = 24.dp))
-        Label("رفقا یه برچسب مثل «دانشگاه» یا «۲٫۳ کیلومتر» می‌بینن. جای دقیقت فقط اگه خودت بخوای.", 15, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp))
-        Column(Modifier.padding(top = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            listOf(Icons.Rounded.BlurOn to "به‌طور پیش‌فرض تقریبی", Icons.Rounded.VisibilityOff to "حالت روح، هر وقت خواستی", Icons.Rounded.Lock to "هیچ‌وقت فروخته نمی‌شه. بدون تبلیغ.").forEach { (icon, text) ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconCircle(icon, null, size = 40.dp, tint = t.vio, shape = RoundedCornerShape(14.dp))
-                    RowSpacer(12.dp)
-                    Label(text, 15, t.fg)
-                }
-            }
-        }
-        Fill()
-        val s = store.state
-        PrimaryButton(if (s.busy) "یه لحظه…" else "موقع استفاده از برنامه اجازه بده", store::allowLocation, enabled = !s.busy)
-        Box(Modifier.fillMaxWidth().padding(top = 6.dp).height(48.dp).tap { if (!store.state.busy) store.finishOnboarding() }, contentAlignment = Alignment.Center) {
-            Label("بعداً", 15, t.sub)
-        }
+        PrimaryButton(if (s.onboarded) t("ذخیره", "Save") else t("عالیه", "Looks good"), { if (s.onboarded) store.saveProfile() else store.finishOnboarding() }, enabled = s.nick.isNotBlank() && !s.busy)
     }
 }
 
@@ -375,23 +321,120 @@ fun JoinedScreen(store: AppStore) {
                     Placed("sleeping", 252.dp, 232.dp, 88.dp)
                 }
             }
-            Title("اومدی تو!", 42, modifier = Modifier.fillMaxWidth(), maxLines = 1, align = TextAlign.Center)
+            Title(t("اومدی تو!", "You're in!"), 42, modifier = Modifier.fillMaxWidth(), maxLines = 1, align = TextAlign.Center)
             Text(
                 buildAnnotatedString {
-                    append("به ")
+                    append(t("به ", "To "))
                     val g = s.realGroups.lastOrNull()
-                    withStyle(SpanStyle(color = t.fg, fontWeight = FontWeight.Black)) { append(g?.name ?: "گروه") }
+                    withStyle(SpanStyle(color = t.fg, fontWeight = FontWeight.Black)) { append(g?.name ?: t("گروه", "Group")) }
                     val names = g?.members?.map { it.nick }?.filter { it != s.nick }?.take(4).orEmpty()
-                    append(if (names.isEmpty()) " خوش اومدی." else " خوش اومدی. ${names.joinToString("، ")} الان می‌بیننت.")
+                    append(if (names.isEmpty()) t(" خوش اومدی.", " welcome.") else t(" خوش اومدی. ${names.joinToString("، ")} الان می‌بیننت.", " welcome. ${names.joinToString(", ")} can see you now."))
                 },
                 style = Type.body(16.sp, FontWeight.Bold, t.sub).copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp).widthIn(max = 300.dp),
             )
             ColumnSpacer(24.dp)
-            PrimaryButton("اولین وضعیتت رو بذار", store::openSheetFromJoined)
+            PrimaryButton(t("اولین وضعیتت رو بذار", "Post your first status"), store::openSheetFromJoined)
             Box(Modifier.fillMaxWidth().padding(top = 6.dp).height(48.dp).tap { store.tab(com.sinapticc.friendsstatus.model.Screen.Home) }, contentAlignment = Alignment.Center) {
-                Label("به گروه سلام کن", 15, t.sub)
+                Label(t("به گروه سلام کن", "Say hi to the group"), 15, t.sub)
             }
         }
+    }
+}
+
+// ------------------------------------------------------------------ Recovery code display
+
+@Composable
+fun RecoveryCodeScreen(store: AppStore) {
+    val s = store.state
+    val t = LocalTokens.current
+    val code = s.recoveryCode
+    FixedScreen {
+        BackButton(store::back)
+        Title(t("کد بازیابی حساب", "Recovery code"), 32, modifier = Modifier.padding(top = 28.dp))
+        Label(t("این کد رو یه جای امن نگه دار. اگه اپ پاک شد، با همین برمی‌گردی.", "Keep this code safe. If you reinstall the app, you'll need it."), 16, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp))
+            if (code != null) {
+                val formatted = code.take(4) + "-" + code.drop(4).take(4) + "-" + code.drop(8)
+                Card(Modifier.fillMaxWidth().padding(top = 28.dp), padding = 20.dp) {
+                    // Show code large in LTR isolate
+                    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr) {
+                        Text(formatted, style = Type.display(36.sp, t.fg), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                    }
+                }
+                Row(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(
+                        Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(26.dp)).background(t.tonal).tap {
+                            store.copyRecoveryCode()
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) { Label(t("کپی", "Copy"), 15, t.fg, FontWeight.Black) }
+                    Box(
+                        Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(26.dp)).background(t.acc).tap { store.showRecoveryCode() },
+                        contentAlignment = Alignment.Center,
+                    ) { Label(t("کد جدید", "New code"), 15, t.onAcc, FontWeight.Black) }
+                }
+            } else {
+                Card(Modifier.fillMaxWidth().padding(top = 28.dp), padding = 20.dp) {
+                    Label(t("دارم کد رو می‌سازم...", "Generating code..."), 16, t.sub, modifier = Modifier.fillMaxWidth())
+                }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Recover account
+
+@Composable
+fun RecoverScreen(store: AppStore) {
+    val s = store.state
+    val t = LocalTokens.current
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    val code = s.recoverCode
+    FixedScreen {
+        BackButton(store::back)
+        Title(t("برگرد به حسابت", "Recover account"), 32, modifier = Modifier.padding(top = 28.dp))
+        Label(t("کد بازیابی‌ت رو بزن.", "Enter your recovery code."), 16, t.sub, FontWeight.Bold, Modifier.padding(top = 8.dp))
+        BasicTextField(
+            value = code,
+            onValueChange = store::setRecoverCode,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { store.recoverAccount() }),
+            cursorBrush = SolidColor(Color.Transparent),
+            textStyle = Type.body(1.sp, color = Color.Transparent),
+            modifier = Modifier.size(1.dp).alpha(0f).focusRequester(focus),
+        )
+        // Show code boxes in LTR for readability
+        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr) {
+            Row(
+                Modifier.fillMaxWidth().padding(top = 28.dp).tap { runCatching { focus.requestFocus() } },
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                // 12 chars displayed as 3 groups of 4, with dashes
+                val flat = code.filter { it.isLetterOrDigit() }.take(12)
+                val groups = listOf(0, 4, 8)
+                groups.forEachIndexed { gi, start ->
+                    if (gi > 0) {
+                        Box(Modifier.padding(top = 20.dp)) { Title("-", 28, t.sub) }
+                    }
+                    repeat(4) { i ->
+                        val idx = start + i
+                        val active = idx == flat.length
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .height(64.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(t.card)
+                                .border(2.dp, if (active) t.acc else Color.Transparent, RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Title(flat.getOrNull(idx)?.let { Fa.digits(it.toString()) } ?: "", 28)
+                        }
+                    }
+                }
+            }
+        }
+        Fill()
+        PrimaryButton(t("برگرد به حسابم", "Recover account"), store::recoverAccount, enabled = code.filter { it.isLetterOrDigit() }.length == 12)
     }
 }

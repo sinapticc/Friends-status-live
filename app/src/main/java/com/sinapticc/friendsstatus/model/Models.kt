@@ -3,8 +3,8 @@ package com.sinapticc.friendsstatus.model
 import androidx.compose.ui.graphics.Color
 
 enum class Screen {
-    Welcome, JoinCode, ProfileSetup, Location, Joined,
-    Home, Friend, Privacy, Group, Profile, Editor, Crop,
+    Welcome, JoinCode, ProfileSetup, Joined, Recover,
+    Home, Friend, Privacy, Group, Profile, Editor, Crop, RecoveryCode,
 }
 
 /** One past or current status in a friend's timeline. [time] is HH:mm. */
@@ -16,14 +16,13 @@ data class Friend(
     val groups: Set<String>,
     val status: String,
     val text: String,
-    val place: String,
-    val distance: String,
     /** Minutes since the status was posted. */
     val minutesAgo: Int,
     val colorA: Color,
     val colorB: Color,
     val history: List<HistoryItem>,
     val avatar: Int = 0,
+    val expiresAt: Long? = null,
 )
 
 data class MyStatus(
@@ -39,7 +38,7 @@ data class MyStatus(
 ) {
     companion object {
         /** Shown before the user has posted anything. */
-        val None = MyStatus("custom", "هنوز وضعیتی نذاشتی", "")
+        val None = MyStatus("custom", t("هنوز وضعیتی نذاشتی", "No status yet"), "")
     }
 }
 
@@ -58,8 +57,6 @@ data class GroupInfo(
     val color: Int,
     val pair: Boolean,
     val admin: Boolean,
-    val share: ShareLevel,
-    val muted: Boolean,
     /** Invite code, visible to admins only. */
     val code: String?,
     val codeTtl: String,
@@ -67,7 +64,3 @@ data class GroupInfo(
 )
 
 data class Toast(val key: String, val text: String, val id: Long)
-
-enum class Precision { Exact, Approx, Off }
-
-enum class ShareLevel { Exact, Approx, StatusOnly }

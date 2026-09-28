@@ -8,21 +8,29 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import com.sinapticc.friendsstatus.model.Catalog
 import com.sinapticc.friendsstatus.model.Look
 import com.sinapticc.friendsstatus.platform.artPainter
@@ -94,6 +102,14 @@ private fun squash(p: Float): Pair<Float, Float> {
 /** Artwork is drawn on a viewBox 12% larger than the character's box, like the design. */
 private val Overscan = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.12f; scaleY = 1.12f }
 
+/** Status circle palettes for emoji rendering, keyed by the status's category (dark first). */
+private val CircleDark = listOf(
+    Color(0xFF3A2A55), Color(0xFF2B3F5C), Color(0xFF4A2F3F), Color(0xFF2F4A3C), Color(0xFF4A3F2A),
+)
+private val CircleLight = listOf(
+    Color(0xFFEDE4FA), Color(0xFFE3ECF8), Color(0xFFF8E4EC), Color(0xFFE3F4EA), Color(0xFFF6EEDC),
+)
+
 @Composable
 fun StatusChar(
     key: String,
@@ -103,24 +119,13 @@ fun StatusChar(
     idle: Boolean = false,
     bounceKey: Any? = null,
 ) {
+    val dark = isSystemInDarkTheme()
+    val palette = if (dark) CircleDark else CircleLight
     BoxWithConstraints(modifier.charMotion(idle, bounceKey)) {
-        Image(
-            artPainter("ch_$key"),
-            contentDescription = null,
-            modifier = Overscan,
-            contentScale = ContentScale.Fit,
-            colorFilter = if (hue != 0) hueRotate(hue) else null,
-        )
-        if (acc != "none") {
-            val (ax, ay, scale) = Catalog.accAnchors[key] ?: Triple(50f, 14f, 1f)
-            val w = maxWidth
-            Image(
-                artPainter("acc_$acc"),
-                contentDescription = null,
-                modifier = Modifier
-                    .absoluteOffset(x = w * ((ax - 28 * scale) / 100f), y = w * ((ay - 28 * scale) / 100f))
-                    .size(w * (56 * scale / 100f)),
-            )
+        val bg = palette[Catalog.categoryHueIndex(key)]
+        val fs = with(LocalDensity.current) { (maxWidth * .52f).toSp() }
+        Box(Modifier.fillMaxSize().background(bg, CircleShape), contentAlignment = Alignment.Center) {
+            Text(Catalog.emojiFor(key), fontSize = fs, lineHeight = fs, textAlign = TextAlign.Center)
         }
     }
 }

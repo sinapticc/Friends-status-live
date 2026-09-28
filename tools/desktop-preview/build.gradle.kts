@@ -31,6 +31,6 @@ compose.desktop {
     application {
         mainClass = "MainKt"
         jvmArgs += listOf("-Dout=${layout.buildDirectory.dir("shots").get().asFile}") +
-            listOfNotNull(System.getProperty("api")?.let { "-Dapi=$it" }, System.getProperty("only")?.let { "-Donly=$it" })
+            listOfNotNull(System.getProperty("api")?.let { "-Dapi=$it" }, System.getProperty("only")?.let { "-Donly=$it" }, System.getProperty("lang")?.let { "-Dlang=$it" })
     }
 }

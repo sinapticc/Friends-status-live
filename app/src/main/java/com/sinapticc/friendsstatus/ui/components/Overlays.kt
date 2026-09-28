@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,6 +57,8 @@ fun BoxScope.BottomSheet(
     visible: Boolean,
     onDismiss: () -> Unit,
     horizontalPadding: Int = 18,
+    /** Optional cap on the sheet height (fraction of the screen); lets the content use `weight`. */
+    maxHeightFraction: Float? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val t = LocalTokens.current
@@ -72,6 +75,7 @@ fun BoxScope.BottomSheet(
         Column(
             Modifier
                 .fillMaxWidth()
+                .then(if (maxHeightFraction != null) Modifier.fillMaxHeight(maxHeightFraction) else Modifier)
                 .shadow(30.dp, shape)
                 .clip(shape)
                 .background(t.sheet)

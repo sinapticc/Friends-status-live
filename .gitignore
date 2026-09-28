@@ -9,3 +9,9 @@ build/
 .cxx
 node_modules/
 /app/google-services.json
+
+# Agent logs, screenshots, local D1 state and superseded attempts stay local
+/logs/
+/archive/
+.kotlin/
+server/.wrangler/

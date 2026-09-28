@@ -10,20 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Business
-import androidx.compose.material.icons.rounded.DirectionsCar
-import androidx.compose.material.icons.rounded.FitnessCenter
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.LocalMall
-import androidx.compose.material.icons.rounded.LocationOn
-import androidx.compose.material.icons.rounded.Nightlife
-import androidx.compose.material.icons.rounded.School
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sinapticc.friendsstatus.ui.theme.LocalInsets
@@ -76,15 +66,4 @@ fun TopBar(start: @Composable () -> Unit, middle: @Composable () -> Unit = {}, e
 }
 
 /** Flips icons that point in a reading direction (send, arrows) for right-to-left. */
-fun Modifier.mirror(): Modifier = graphicsLayer { scaleX = -1f }
-
-fun placeIcon(place: String): ImageVector = when {
-    place.contains("خونه") -> Icons.Rounded.Home
-    place.contains("دانشگاه") -> Icons.Rounded.School
-    place.contains("باشگاه") -> Icons.Rounded.FitnessCenter
-    place.contains("کافه") -> Icons.Rounded.Nightlife
-    place.contains("اتوبان") || place.contains("جاده") -> Icons.Rounded.DirectionsCar
-    place.contains("پاساژ") -> Icons.Rounded.LocalMall
-    place.contains("آرایشگاه") -> Icons.Rounded.Business
-    else -> Icons.Rounded.LocationOn
-}
+fun Modifier.mirror(): Modifier = if (com.sinapticc.friendsstatus.model.L10n.isFa) graphicsLayer { scaleX = -1f } else this

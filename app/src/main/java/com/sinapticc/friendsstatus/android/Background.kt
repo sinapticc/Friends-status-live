@@ -22,7 +22,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import java.util.concurrent.TimeUnit
 
 /** Shared preferences file used by the app, the worker and the widget. */
-fun prefs(ctx: Context) = ctx.getSharedPreferences("fsl", Context.MODE_PRIVATE)
+fun prefs(ctx: Context) = ctx.getSharedPreferences("fsl", Context.MODE_PRIVATE).also { p ->
+    // The widget or background worker may run before the app after an upgrade.
+    if (p.getString("locationDataPurged", null) != "true") {
+        p.edit().remove("lastLoc").remove("precision").remove("widget")
+            .putString("locationDataPurged", "true").commit()
+    }
+}
 
 /** Lets a running app react to pushes right away. */
 object LiveBus {
@@ -94,6 +100,7 @@ object Sync {
 /** Fetches the feed in the background and refreshes the home screen widgets. */
 class SyncWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
+        com.sinapticc.friendsstatus.model.L10n.isFa = com.sinapticc.friendsstatus.model.L10n.resolve(prefs(applicationContext).getString("lang", "auto") ?: "auto", java.util.Locale.getDefault().language)
         val p = prefs(applicationContext)
         val token = p.getString("token", null) ?: return Result.success()
         val api = Api(BuildConfig.API_URL) { token }
