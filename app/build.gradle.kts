@@ -55,8 +55,8 @@ android {
         applicationId = "com.sinapticc.friendsstatus"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.1.2"
+        versionCode = 10
+        versionName = "1.3.0"
 
         buildConfigField("String", "API_URL", "\"${setting("FSL_API_URL")}\"")
         buildConfigField("String", "FIREBASE_APP_ID", "\"${firebase["appId"] ?: ""}\"")

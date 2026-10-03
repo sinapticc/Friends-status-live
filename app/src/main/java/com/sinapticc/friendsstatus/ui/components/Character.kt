@@ -125,7 +125,17 @@ fun StatusChar(
         val bg = palette[Catalog.categoryHueIndex(key)]
         val fs = with(LocalDensity.current) { (maxWidth * .52f).toSp() }
         Box(Modifier.fillMaxSize().background(bg, CircleShape), contentAlignment = Alignment.Center) {
-            Text(Catalog.emojiFor(key), fontSize = fs, lineHeight = fs, textAlign = TextAlign.Center)
+            val artId = com.sinapticc.friendsstatus.platform.artRes("ch_$key")
+            if (artId != null) {
+                Image(
+                    painter = artPainter("ch_$key"),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(0.86f),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Text(Catalog.emojiFor(key), fontSize = fs, lineHeight = fs, textAlign = TextAlign.Center)
+            }
         }
     }
 }

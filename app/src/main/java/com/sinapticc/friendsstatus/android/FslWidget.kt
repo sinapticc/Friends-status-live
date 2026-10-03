@@ -56,17 +56,18 @@ import androidx.work.Constraints
 import androidx.work.NetworkType
 import java.util.concurrent.TimeUnit
 
-/** A group the user belongs to, saved with the widget snapshot for the config screen + header. */
 @Serializable
 data class WidgetGroup(val id: String, val name: String, val icon: String, val color: Int, val pair: Boolean = false)
 
-/** One person (friend or me) with the status + the group ids they belong to (for per-widget filters). */
 @Serializable
 data class WidgetFriend(
-    val nick: String, val avatar: Int, val key: String, val text: String, val at: Long, val expiresAt: Long?,
+    val nick: String, val avatar: Int, 
+    val key: String = "", val text: String = "", val at: Long = 0L, val expiresAt: Long? = null,
     val groups: List<String> = emptyList(),
     val id: String = "",
-)
+) {
+    val hasStatus: Boolean get() = key.isNotEmpty()
+}
 
 @Serializable
 data class WidgetState(
@@ -76,25 +77,25 @@ data class WidgetState(
     val groups: List<WidgetGroup> = emptyList(),
 )
 
-/** What the widget shows, saved on every sync so it can render without the network. */
 object WidgetData {
-    /** The pref key holding the app widget id -> chosen group (or "all"). */
     const val GROUP_PREF = "widgetGroup_"
 
     fun save(ctx: Context, feed: FeedDto) {
         val p = prefs(ctx)
         val friends = feed.friends
-            .filter { it.status != null }
-            .sortedByDescending { it.status!!.at }
-            .map { f -> WidgetFriend(f.nick, f.avatar, f.status!!.key, f.status.text, f.status.at, f.status.expiresAt, f.groups, f.id) }
-        // My own status, so the widget can show me too (nick «تو»).
-        val me = feed.me.status?.let { st -> WidgetFriend(t("من", "Me"), feed.me.avatar, st.key, st.text, st.at, st.expiresAt, id = feed.me.id) }
+            .sortedByDescending { it.status?.at ?: 0L }
+            .map { f -> 
+                val st = f.status
+                WidgetFriend(f.nick, f.avatar, st?.key ?: "", st?.text ?: "", st?.at ?: 0L, st?.expiresAt, f.groups, f.id) 
+            }
+        val st = feed.me.status
+        val me = WidgetFriend(t("من", "Me"), feed.me.avatar, st?.key ?: "", st?.text ?: "", st?.at ?: 0L, st?.expiresAt, id = feed.me.id)
         val groups = feed.groups.map { WidgetGroup(it.id, it.name, it.icon, it.color, it.kind == "pair") }
         p.edit().putString("widget", ApiJson.encodeToString(WidgetState.serializer(), WidgetState(t("همه‌ی رفقا", "All friends"), friends, me, groups))).apply()
-        // Bug 2: schedule a one-time sync when the earliest status expires so it doesn't linger.
+        
         val now = System.currentTimeMillis()
         val expiryTimes = mutableListOf<Long>()
-        me?.expiresAt?.let { if (it > now) expiryTimes.add(it) }
+        me.expiresAt?.let { if (it > now) expiryTimes.add(it) }
         friends.mapNotNullTo(expiryTimes) { it.expiresAt?.takeIf { e -> e > now } }
         val earliestExpiry = expiryTimes.minOrNull()
         if (earliestExpiry != null) {
@@ -111,52 +112,64 @@ object WidgetData {
         prefs(ctx).getString("widget", null)?.let { runCatching { ApiJson.decodeFromString(WidgetState.serializer(), it) }.getOrNull() }
 }
 
-// Colors of the design's "glow" widget look.
 private val Fg = ColorProvider(Color(0xFFF6F2FF))
 private val Sub = ColorProvider(Color(0x94F6F2FF))
 private val Lime = ColorProvider(Color(0xFFC8F542))
 private val InkC = ColorProvider(Color(0xFF1C1330))
 
-private val Small = DpSize(110.dp, 110.dp)
-private val Wide = DpSize(250.dp, 110.dp)
-private val Big = DpSize(250.dp, 250.dp)
-
 class FslWidget : GlanceAppWidget() {
-    override val sizeMode = SizeMode.Responsive(setOf(Small, Wide, Big))
+    override val sizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         com.sinapticc.friendsstatus.model.L10n.isFa = com.sinapticc.friendsstatus.model.L10n.resolve(prefs(context).getString("lang", "auto") ?: "auto", java.util.Locale.getDefault().language)
         val data = WidgetData.load(context)
         if (data == null) {
-            provideContent { Content(null) }
+            provideContent { EmptyState() }
             return
         }
         val now = System.currentTimeMillis()
-        // The saved snapshot is stale whenever any entry (mine or a friend's) has expired.
         if (data.friends.any { it.expiresAt != null && it.expiresAt < now } || (data.me?.expiresAt?.let { it < now } == true)) {
             Sync.now(context)
         }
-        // Resolve the per-widget group choice (falls back to all if missing / no longer exists).
-        val (groupId, groupName) = groupFor(context, id, data)
-        val hidden = prefs(context).getString("widgetHidden", "").orEmpty().split(",").filter { it.isNotBlank() }.toSet()
-        val friends = if (groupId != null) {
-            data.friends.filter { groupId in it.groups }
-        } else {
-            // «همه‌ی رفقا»: show every friend; only hide if ALL their groups are in the hidden set.
-            // Pair groups are never hidden, so any friend with a pair group is always shown.
-            data.friends.filter { f -> f.groups.any { it !in hidden } }
+        
+        val chosenPeople = chosenPeople(context, id, data)
+        if (chosenPeople.isEmpty()) {
+            provideContent { EmptyState() }
+            return
         }
-        val validFriends = friends.filter { it.expiresAt == null || it.expiresAt >= now }
-        val me = data.me?.takeIf { it.expiresAt == null || it.expiresAt >= now }
-        provideContent { Content(WidgetState(groupName ?: data.title, validFriends, me, data.groups)) }
+        provideContent { Content(chosenPeople, data.me) }
     }
 
-    private fun groupFor(context: Context, id: GlanceId, data: WidgetState): Pair<String?, String?> {
+    private fun chosenPeople(context: Context, id: GlanceId, data: WidgetState): List<WidgetFriend> {
         val appWidgetId = runCatching { GlanceAppWidgetManager(context).getAppWidgetId(id) }.getOrNull()
-        val pref = appWidgetId?.let { prefs(context).getString("${WidgetData.GROUP_PREF}$it", null) }
-        if (pref == null || pref == "all") return null to null
-        val g = data.groups.firstOrNull { it.id == pref }
-        return if (g != null) g.id to g.name else null to null
+        if (appWidgetId == null) return defaultPeople(data)
+        
+        val p = prefs(context)
+        val peoplePref = p.getString("widgetPeople_$appWidgetId", null)
+        if (peoplePref != null) {
+            val ids = peoplePref.split(",").filter { it.isNotBlank() }
+            if (ids.isEmpty()) return defaultPeople(data)
+            return ids.mapNotNull { uid -> 
+                if (uid == "me") data.me else data.friends.find { it.id == uid } 
+            }
+        }
+        
+        val groupPref = p.getString("${WidgetData.GROUP_PREF}$appWidgetId", null)
+        if (groupPref != null && groupPref != "all") {
+            val groupFriends = data.friends.filter { groupPref in it.groups }
+            val ids = buildString {
+                if (data.me != null) append("me,")
+                groupFriends.forEach { append(it.id).append(",") }
+            }.trimEnd(',')
+            p.edit().putString("widgetPeople_$appWidgetId", ids).apply()
+            return listOfNotNull(data.me) + groupFriends
+        }
+        
+        return defaultPeople(data)
+    }
+
+    private fun defaultPeople(data: WidgetState): List<WidgetFriend> {
+        return listOfNotNull(data.me) + data.friends.filter { it.hasStatus }.take(3)
     }
 
     companion object {
@@ -193,83 +206,39 @@ class FslWidgetReceiver : GlanceAppWidgetReceiver() {
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         super.onDeleted(context, appWidgetIds)
-        // Drop the per-widget group choice so a removed widget leaks nothing.
-        prefs(context).edit().apply { appWidgetIds.forEach { remove("${WidgetData.GROUP_PREF}$it") } }.apply()
+        prefs(context).edit().apply { 
+            appWidgetIds.forEach { 
+                remove("${WidgetData.GROUP_PREF}$it") 
+                remove("widgetPeople_$it")
+            } 
+        }.apply()
     }
 }
 
-/** Dark status circle palette used for the widget's emoji chips. */
 private val WidgetCircle = listOf(
     Color(0xFF3A2A55), Color(0xFF2B3F5C), Color(0xFF4A2F3F), Color(0xFF2F4A3C), Color(0xFF4A3F2A),
 )
 
-/** Emoji chip: a colored circle with the status emoji, ~60% of [size] in sp. */
 @Composable
 private fun CharEmoji(key: String, size: Int) {
     val bg = WidgetCircle[Catalog.categoryHueIndex(key)]
+    val resId = com.sinapticc.friendsstatus.platform.artRes("ch_$key") ?: 0
     Box(
         GlanceModifier.size(size.dp).cornerRadius((size / 2).dp).background(bg),
         contentAlignment = Alignment.Center,
-    ) { Text(Catalog.emojiFor(key), style = TextStyle(fontSize = (size * .6f).sp, textAlign = TextAlign.Center)) }
-}
-
-private fun text(size: Int, color: ColorProvider = Fg, weight: FontWeight = FontWeight.Bold) =
-    TextStyle(color = color, fontSize = size.sp, fontWeight = weight, textAlign = TextAlign.End)
-
-/** Small «تو» chip used in the top corner of the small widget. */
-@Composable
-private fun MeChip(me: WidgetFriend?) {
-    val emoji = if (me != null) Catalog.emojiFor(me.key) else "✨"
-    Row(
-        GlanceModifier.background(ColorProvider(Color(0xFF3A2A55))).cornerRadius(11.dp).padding(horizontal = 6.dp, vertical = 3.dp).cellClick(me, true),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(emoji, style = text(11))
-        Spacer(GlanceModifier.width(3.dp))
-        Text(t("من", "Me"), style = text(11, Fg, FontWeight.Bold))
-    }
-}
-
-@Composable
-private fun Content(data: WidgetState?) {
-    val size = LocalSize.current
-    Box(
-        GlanceModifier
-            .fillMaxSize()
-            .background(ImageProvider(R.drawable.widget_bg))
-            .cornerRadius(28.dp)
-            .clickable(actionStartActivity<MainActivity>()),
-    ) {
-        when {
-            data == null -> Empty(true)
-            data.friends.isEmpty() && data.me == null -> Empty(false)
-            size.width < Wide.width -> One(data)
-            size.height < Big.height -> Four(data)
-            else -> ListView(data)
+        if (resId != 0) {
+            Image(
+                provider = ImageProvider(resId),
+                contentDescription = null,
+                modifier = GlanceModifier.size((size * 0.86f).dp),
+                contentScale = androidx.glance.layout.ContentScale.Fit
+            )
+        } else {
+            Text(Catalog.emojiFor(key), style = TextStyle(fontSize = (size * .6f).sp, textAlign = TextAlign.Center))
         }
     }
 }
-
-@Composable
-private fun Empty(notSignedIn: Boolean) {
-    Column(GlanceModifier.fillMaxSize().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalAlignment = Alignment.CenterHorizontally) {
-        CharEmoji("bored", 56)
-        Text(if (notSignedIn) t("برنامه رو باز کن", "Open the app") else t("هنوز خبری نیست", "Nothing yet"), style = text(13).copy(textAlign = TextAlign.Center))
-    }
-}
-
-@Composable
-private fun Header(title: String) {
-    Row(GlanceModifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = text(11, Sub), maxLines = 1)
-        Spacer(GlanceModifier.defaultWeight())
-        Text("Friends Status Live", style = text(13, Fg, FontWeight.Bold))
-        Spacer(GlanceModifier.width(6.dp))
-        Box(GlanceModifier.size(7.dp).cornerRadius(4.dp).background(Lime)) {}
-    }
-}
-
-// ---------------------------------------------------------------- Instagram-Notes style layouts
 
 private val BubbleBg = ColorProvider(Color(0xEBFFFFFF))
 private val BubbleFg = ColorProvider(Color(0xFF1B1026))
@@ -278,122 +247,89 @@ private val Ring = ColorProvider(Color(0xFF1B1026))
 
 private fun recent(f: WidgetFriend) = System.currentTimeMillis() - f.at < 60 * 60_000L
 
-/** One person: note bubble on top, emoji circle (with green "recent" dot), name under it. */
 @Composable
-private fun RowScope.NoteCell(f: WidgetFriend?, isMe: Boolean, circle: Int) {
-    Column(GlanceModifier.defaultWeight().padding(horizontal = 2.dp).cellClick(f, isMe), horizontalAlignment = Alignment.CenterHorizontally) {
-        NoteCellBody(f, isMe, circle)
-    }
-}
-
-@Composable
-private fun NoteCellBody(f: WidgetFriend?, isMe: Boolean, circle: Int) {
-    val note = when {
-        f != null -> Catalog.displayText(f.key, f.text)
-        else -> t("یه وضعیت بذار", "Set a status")
-    }
-    // Bubble + small round tail
-    Box(
-        GlanceModifier.background(BubbleBg).cornerRadius(12.dp).padding(horizontal = 7.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(note, maxLines = 2, style = TextStyle(color = BubbleFg, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center))
-    }
-    Box(GlanceModifier.size(6.dp).cornerRadius(3.dp).background(BubbleBg)) {}
-    Spacer(GlanceModifier.height(2.dp))
-    // Circle with dot / plus badge
-    Box(GlanceModifier.size((circle + 4).dp), contentAlignment = Alignment.BottomStart) {
-        Box(GlanceModifier.size((circle + 4).dp), contentAlignment = Alignment.Center) {
-            if (f != null) CharEmoji(f.key, circle) else CharEmoji("custom", circle)
+private fun NoteCell(f: WidgetFriend, isMe: Boolean, circle: Int) {
+    val now = System.currentTimeMillis()
+    val validStatus = f.hasStatus && (f.expiresAt == null || f.expiresAt >= now)
+    
+    Column(GlanceModifier.width(70.dp).padding(horizontal = 2.dp).cellClick(f, isMe), horizontalAlignment = Alignment.CenterHorizontally) {
+        if (validStatus) {
+            val note = Catalog.displayText(f.key, f.text)
+            Box(
+                GlanceModifier.background(BubbleBg).cornerRadius(12.dp).padding(horizontal = 7.dp, vertical = 4.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(note, maxLines = 2, style = TextStyle(color = BubbleFg, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center))
+            }
+            Box(GlanceModifier.size(6.dp).cornerRadius(3.dp).background(BubbleBg)) {}
+            Spacer(GlanceModifier.height(2.dp))
+        } else {
+            Spacer(GlanceModifier.height(26.dp))
         }
-        when {
-            f == null && isMe -> Box(GlanceModifier.size(18.dp).cornerRadius(9.dp).background(Ring).padding(2.dp)) {
-                Box(GlanceModifier.fillMaxSize().cornerRadius(7.dp).background(Lime), contentAlignment = Alignment.Center) {
-                    Text("+", style = TextStyle(color = BubbleFg, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center))
+
+        Box(GlanceModifier.size((circle + 4).dp), contentAlignment = Alignment.BottomStart) {
+            Box(GlanceModifier.size((circle + 4).dp).cornerRadius(((circle + 4) / 2).dp).background(ColorProvider(Color(0xFF2B2B33))), contentAlignment = Alignment.Center) {
+                if (validStatus) {
+                    CharEmoji(f.key, circle)
+                } else {
+                    Text(f.nick.take(1), style = TextStyle(color = Lime, fontSize = (circle * 0.4f).sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center))
                 }
             }
-            f != null && recent(f) -> Box(GlanceModifier.size(14.dp).cornerRadius(7.dp).background(Ring).padding(2.dp)) {
-                Box(GlanceModifier.fillMaxSize().cornerRadius(5.dp).background(Green)) {}
-            }
-        }
-    }
-    Spacer(GlanceModifier.height(3.dp))
-    Text(if (isMe) t("من", "Me") else (f?.nick ?: ""), maxLines = 1, style = TextStyle(color = Sub, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center))
-}
-
-/** A centered row of note cells; empty slots keep equal widths. */
-@Composable
-private fun NotesRow(people: List<Pair<WidgetFriend?, Boolean>>, slots: Int, circle: Int) {
-    val ordered = if (com.sinapticc.friendsstatus.model.L10n.isFa) people.reversed() else people
-    Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Top, horizontalAlignment = Alignment.CenterHorizontally) {
-        if (people.size < 4) {
-            ordered.forEach { (f, me) ->
-                Column(GlanceModifier.width((circle + 28).dp).padding(horizontal = 2.dp).cellClick(f, me), horizontalAlignment = Alignment.CenterHorizontally) {
-                    NoteCellBody(f, me, circle)
+            if (!validStatus && isMe) {
+                Box(GlanceModifier.size(18.dp).cornerRadius(9.dp).background(Ring).padding(2.dp)) {
+                    Box(GlanceModifier.fillMaxSize().cornerRadius(7.dp).background(Lime), contentAlignment = Alignment.Center) {
+                        Text("+", style = TextStyle(color = BubbleFg, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center))
+                    }
+                }
+            } else if (validStatus && recent(f)) {
+                Box(GlanceModifier.size(14.dp).cornerRadius(7.dp).background(Ring).padding(2.dp)) {
+                    Box(GlanceModifier.fillMaxSize().cornerRadius(5.dp).background(Green)) {}
                 }
             }
-        } else {
-            ordered.forEach { (f, me) -> NoteCell(f, me, circle) }
-            repeat(slots - people.size) { Spacer(GlanceModifier.defaultWeight()) }
+        }
+        Spacer(GlanceModifier.height(3.dp))
+        
+        Box(GlanceModifier.cornerRadius(6.dp).background(ColorProvider(Color(0x99000000))).padding(horizontal = 6.dp, vertical = 2.dp)) {
+            Text(if (isMe) t("من", "Me") else f.nick, maxLines = 1, style = TextStyle(color = Fg, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center))
         }
     }
 }
 
-private fun cells(data: WidgetState, max: Int): List<Pair<WidgetFriend?, Boolean>> =
-    listOf<Pair<WidgetFriend?, Boolean>>(data.me to true) + data.friends.take(max - 1).map { it to false }
-
 @Composable
-private fun SmallTitle(title: String) {
-    Row(GlanceModifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = text(10, Sub), maxLines = 1)
-        Spacer(GlanceModifier.defaultWeight())
-        Box(GlanceModifier.size(6.dp).cornerRadius(3.dp).background(Lime)) {}
+private fun EmptyState() {
+    Column(GlanceModifier.fillMaxSize().clickable(actionStartActivity<MainActivity>()), verticalAlignment = Alignment.CenterVertically, horizontalAlignment = Alignment.CenterHorizontally) {
+        CharEmoji("bored", 48)
+        Spacer(GlanceModifier.height(3.dp))
+        Box(GlanceModifier.cornerRadius(6.dp).background(ColorProvider(Color(0x99000000))).padding(horizontal = 6.dp, vertical = 2.dp)) {
+            Text(t("وضعیت بذار", "Post a status"), style = TextStyle(color = Fg, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center))
+        }
     }
 }
 
-/** 2x2: one big note (latest friend, or me), plus the «تو» chip. */
 @Composable
-private fun One(data: WidgetState) {
-    val featured = data.friends.firstOrNull()
-    Column(GlanceModifier.fillMaxSize().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(GlanceModifier.fillMaxWidth()) {
-            if (featured != null) MeChip(data.me)
-            Spacer(GlanceModifier.defaultWeight())
-        }
-        Spacer(GlanceModifier.defaultWeight())
-        Column(GlanceModifier.fillMaxWidth().cellClick(featured ?: data.me, featured == null), horizontalAlignment = Alignment.CenterHorizontally) {
-            if (featured != null) NoteCellBody(featured, false, 64) else NoteCellBody(data.me, true, 64)
-        }
-        Spacer(GlanceModifier.defaultWeight())
-    }
-}
+private fun Content(people: List<WidgetFriend>, me: WidgetFriend?) {
+    val size = LocalSize.current
+    val w = size.width.value.toInt()
+    val h = size.height.value.toInt()
+    
+    val cellsPerRow = maxOf(1, w / 70)
+    val maxRows = maxOf(1, h / 80)
+    val maxCells = cellsPerRow * maxRows
+    
+    val visible = people.take(maxCells)
+    val circleSize = if (w < 100 && h < 100) 44 else 52
 
-/** 4x2: one row — me + 3 most recent friends. */
-@Composable
-private fun Four(data: WidgetState) {
-    Column(GlanceModifier.fillMaxSize()) {
-        SmallTitle(data.title)
-        Spacer(GlanceModifier.defaultWeight())
-        NotesRow(cells(data, 4), 4, 48)
-        Spacer(GlanceModifier.defaultWeight())
-    }
-}
-
-/** 4x4: two rows — me + 7 most recent friends. */
-@Composable
-private fun ListView(data: WidgetState) {
-    val all = cells(data, 8)
-    Column(GlanceModifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        SmallTitle(data.title)
-        Spacer(GlanceModifier.defaultWeight())
-        NotesRow(all.take(4), 4, 52)
-        if (all.size > 4) {
-            Spacer(GlanceModifier.height(14.dp))
-            NotesRow(all.drop(4), 4, 52)
-        } else {
-            Spacer(GlanceModifier.height(16.dp))
-            Text(t("رفقات که وضعیت بذارن این‌جا میان", "Your friends' statuses will show here"), style = text(11, Sub).copy(textAlign = TextAlign.Center))
+    Column(GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalAlignment = Alignment.CenterHorizontally) {
+        val rows = visible.chunked(cellsPerRow)
+        rows.forEach { rowPeople ->
+            Row(GlanceModifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                rowPeople.forEach { f ->
+                    NoteCell(f, f.id == me?.id || (me != null && f.id == me.id), circleSize)
+                }
+            }
+            if (rowPeople != rows.last()) {
+                Spacer(GlanceModifier.height(8.dp))
+            }
         }
-        Spacer(GlanceModifier.defaultWeight())
     }
 }

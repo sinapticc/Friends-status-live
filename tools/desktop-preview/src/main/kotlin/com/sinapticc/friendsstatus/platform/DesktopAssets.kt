@@ -34,3 +34,5 @@ fun artPainter(name: String): Painter = remember(name) {
         else BitmapPainter(org.jetbrains.skia.Image.makeFromEncoded(f.readBytes()).toComposeImageBitmap())
     }
 }
+
+fun artRes(name: String): Int? = if (File("$RES/drawable-nodpi/$name.webp").exists()) 1 else null

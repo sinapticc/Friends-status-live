@@ -110,6 +110,20 @@ On 2026-09-25 the owner additionally requested: replace the unattractive SVG-der
 
 - T16 done by agy: root cause = Glance ActionParameters PendingIntents collapsed; fix = explicit Intents with unique `fsl://friend/<id>` / `fsl://open/picker` data URIs. Release **1.1.2** (vc 8) installed; `outputs/apk/FriendsStatusLive-1.1.2.apk` is the shareable one (all older APKs in archive). Verified by screenshot: warm-start friend tap opens the friend screen. Owner confirmed 2026-09-28: cold-start friend tap and «Me» → picker both work.
 
+- 2026-10-03: push to GitHub still NOT done (needs `gh auth refresh -h github.com -s workflow` by owner; local commit 3ee3af7). Owner installed Codex CLI 0.160.0 → art generation resumed: **A1** style exploration (5 styles × 6 statuses) `docs/tasks/2026-10-03-A1-art-style-exploration.md`, output `source/art-explore/` (later moved to `archive/attempt-03/art-explore/`), running visibly in Codex. Owner choices: art in app + widget, transparent inside the current colored circle; decide about the 24 older Codex images later.
+
+- 2026-10-03: A1 reduced to 10 images (5 styles × toilet, coffee) at owner request (save Codex usage); full set only after a style is chosen. **T17** compact widget (transparent, only circles, 1×1…4×2) + pick exact people per widget, `docs/tasks/2026-10-03-T17-compact-widget-pick-people.md`, running in agy gemini-3.1-pro-high (account mohammadisina…, confirmed in log). Target release 1.2.0.
+
+- T17 done by agy (9 min): release **1.2.0** (vc 9) built → `outputs/apk/FriendsStatusLive-1.2.0.apk`; widget info 1×1 min 60 dp, resizable, config = pick people (`widgetPeople_<id>`). NOT installed/tested: phone not connected. Next: install, owner re-adds widget, Claude checks.
+
+- 2026-10-03 10:41: 1.2.0 installed; owner placed new widget → Claude screenshot: compact transparent row (Me / R / رفیق تستی), bubbles + name pills, OK. A1: Codex made 19 images (ignored the 10 limit; stopped). Comparison sheet `output/art-explore/styles-compare.png` (5 styles × toilet/coffee, big + actual size). Waiting for owner's style pick.
+
+- 2026-10-03: **owner picked style 3 (Sticker)**. A2 `docs/tasks/2026-10-03-A2-sticker-full-set.md` running in Codex (visible): 41 remaining keys → `source/character-art-sticker/<key>.png` (toilet/coffee/heartbroken already there; first Codex account ran out at 20/44, relaunched with a new account for the remaining 24). Afterwards: Claude/Haiku review, pack to WebP (`tools/art/key_and_pack.py --keyed`), agy task to show images in StatusChar + widget with emoji fallback.
+
+- A2 DONE: 44/44 sticker PNGs in `source/character-art-sticker/` (Claude reviewed contact sheet `logs/codex/A2/contact-sheet.png`: consistent, readable). Claude packed them to `drawable-nodpi/ch_<key>.webp` (512 px, q82, 1.2 MB total). **T18** (show stickers in app + widget, emoji fallback, release 1.3.0) running in agy: `docs/tasks/2026-10-03-T18-sticker-art-in-app.md`.
+
+- T18 DONE: release **1.3.0** (vc 10) installed, `outputs/apk/FriendsStatusLive-1.3.0.apk` is the shareable one. Claude viewed phone screenshot: stickers show in the app list (sleeping sprout, shower, controller). Widget screenshot missed (launcher was on another page) → owner to check widget.
+
 ## Next steps
 
 0. Server is live and the live APK is on the phone. Next: owner places 2×2/4×2/4×4 widgets and a second account posts a status to test widget refresh.
